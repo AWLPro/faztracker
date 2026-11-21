@@ -1,0 +1,3051 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FazTracker — FNaF &amp; Fan Oyunu İlerleme Arşivi</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            bgBase: '#0b0c0f',
+            bgCard: '#13151a',
+            bgElevated: '#1a1d24',
+            accentAmber: '#e59a3c',
+            accentCrimson: '#c93b3b',
+            accentEmerald: '#3ba56b',
+            accentSteam: '#66c0f4',
+            textPrimary: '#f2efe9',
+            textMuted: '#9ca0ab',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Suite TV / Backloggd karanlık kütüphane tasarım sistemi: keskin 0px-2px köşeler */
+    :root {
+      --bg-base: #0b0c0f;
+      --bg-card: #13151a;
+      --bg-elevated: #1a1d24;
+      --border-hairline: rgba(255, 255, 255, 0.1);
+      --text-primary: #f2efe9;
+      --text-muted: #9ca0ab;
+      --accent-amber: #e59a3c;
+      --accent-crimson: #c93b3b;
+      --accent-emerald: #3ba56b;
+      --accent-steam: #66c0f4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Keskin kenar standardı */
+    .sharp-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: 2px;
+    }
+
+    .sharp-elevated {
+      background-color: var(--bg-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 2px;
+    }
+
+    .game-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: 2px;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .game-card:hover {
+      border-color: rgba(229, 154, 60, 0.45);
+      background-color: #161920;
+    }
+
+    /* CRT tarama çizgisi dokusu (poster kapakları için) */
+    .crt-scanlines {
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0px,
+        rgba(255, 255, 255, 0) 2px,
+        rgba(0, 0, 0, 0.28) 3px,
+        rgba(0, 0, 0, 0.28) 4px
+      );
+    }
+
+    /* Özel range slider (keskin işaretçili) */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #232732;
+      height: 5px;
+      border-radius: 0px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 18px;
+      border-radius: 1px;
+      background: #e59a3c;
+      border: 1px solid #0b0c0f;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: #f2aa4c;
+    }
+
+    /* İnce kaydırma çubuğu */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0c0f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #262a36;
+      border-radius: 1px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #383e50;
+    }
+    .ft-loading { position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center; background:rgba(5,6,8,.72); backdrop-filter:blur(3px); }
+    .ft-loading.active { display:flex; }
+    .ft-spinner { width:34px;height:34px;border:3px solid rgba(229,154,60,.2);border-top-color:#e59a3c;border-radius:50%;animation:ft-spin .75s linear infinite; }
+    @keyframes ft-spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#e59a3c]/30 selection:text-[#f2efe9]">
+  <div id="ft-loading" class="ft-loading" aria-live="polite"><div class="sharp-panel px-7 py-6 flex flex-col items-center gap-3"><div class="ft-spinner"></div><span id="ft-loading-text" class="text-xs font-mono text-[#e59a3c]">YÜKLENİYOR...</span></div></div>
+
+
+  <!-- ========================================================= -->
+  <!-- ÜST GEZİNME ÇUBUĞU (HEADER & SEKMELER)                    -->
+  <!-- ========================================================= -->
+  <header class="sticky top-0 z-30 bg-[#0b0c0f]/95 backdrop-blur-sm border-b border-white/10">
+    <div class="max-w-[1380px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Sol: Marka ve Başlık -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-[#13151a] border border-white/15 rounded-[2px] flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-[#e59a3c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="4" width="18" height="16" rx="1" />
+            <circle cx="9" cy="11" r="1.5" fill="currentColor" />
+            <circle cx="15" cy="11" r="1.5" fill="currentColor" />
+            <path d="M8 16h8" stroke-linecap="square" />
+            <path d="M7 2v2M17 2v2" stroke-linecap="square" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-[#f2efe9] uppercase">
+              FAZ<span class="text-[#e59a3c]">TRACKER</span>
+            </h1>
+            <span class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider bg-[#1a1d24] text-[#9ca0ab] border border-white/10 rounded-[1px]">
+              ARCHIVE v2
+            </span>
+          </div>
+          <p class="text-[11px] text-[#9ca0ab]">FNaF &amp; Fan Oyunu İlerleme Arşivi</p>
+        </div>
+      </div>
+
+      <!-- Orta: Ana Görünüm Sekmeleri -->
+      <nav aria-label="Ana Görünümler" class="flex items-center bg-[#13151a] border border-white/10 rounded-[2px] p-0.5 order-3 lg:order-2 w-full lg:w-auto justify-between sm:justify-start">
+        <button type="button" data-view="library" class="nav-view-btn flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-[1px] transition flex items-center justify-center gap-1.5 bg-[#e59a3c] text-[#0b0c0f]">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+          </svg>
+          <span>Kütüphane</span>
+        </button>
+
+        <button type="button" data-view="steam" class="nav-view-btn flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-[1px] transition flex items-center justify-center gap-1.5 text-[#9ca0ab] hover:text-[#66c0f4]">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"/>
+          </svg>
+          <span>Steam Eşleştirme</span>
+        </button>
+      </nav>
+
+      <!-- Sağ: Oyun Ekle & Yedekle / İçe Aktar -->
+      <div class="flex items-center gap-2 order-2 lg:order-3">
+        <button id="btn-backup-open" type="button"
+          class="px-3 py-1.5 text-xs font-medium bg-[#13151a] hover:bg-[#1a1d24] text-[#f2efe9] border border-white/10 rounded-[2px] transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-[#9ca0ab]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="square" d="M4 16v3h16v-3M12 4v11m0 0l-4-4m4 4l4-4" />
+          </svg>
+          <span>Yedekle / İçe Aktar</span>
+        </button>
+
+        <button id="btn-open-add" type="button"
+          class="px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider bg-[#e59a3c] hover:bg-[#f0a84b] text-[#0b0c0f] rounded-[2px] transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="square" d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Oyun Ekle</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Suite TV Kompakt Özet İstatistik Çubuğu -->
+    <div class="border-t border-white/10 bg-[#13151a]/90">
+      <div class="max-w-[1380px] mx-auto px-4 sm:px-6 py-2.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="flex items-center justify-between lg:justify-start lg:gap-3 border-r border-white/10 pr-3">
+          <span class="text-[11px] uppercase tracking-wider text-[#9ca0ab]">Toplam Oyun</span>
+          <span id="stat-total" class="font-mono text-sm font-bold text-[#f2efe9]">26</span>
+        </div>
+
+        <div class="flex items-center justify-between lg:justify-start lg:gap-3 lg:border-r border-white/10 lg:pr-3">
+          <span class="text-[11px] uppercase tracking-wider text-[#9ca0ab]">Bitirilen (%100)</span>
+          <span id="stat-completed" class="font-mono text-sm font-bold text-[#3ba56b]">0</span>
+        </div>
+
+        <div class="flex items-center justify-between lg:justify-start lg:gap-3 border-r border-white/10 pr-3">
+          <span class="text-[11px] uppercase tracking-wider text-[#9ca0ab]">Oynanıyor</span>
+          <span id="stat-playing" class="font-mono text-sm font-bold text-[#e59a3c]">0</span>
+        </div>
+
+        <div class="flex items-center justify-between lg:justify-start lg:gap-3 lg:border-r border-white/10 lg:pr-3">
+          <span class="text-[11px] uppercase tracking-wider text-[#9ca0ab]">Genel İlerleme</span>
+          <div class="flex items-center gap-2">
+            <span id="stat-progress" class="font-mono text-sm font-bold text-[#f2efe9]">%0</span>
+            <div class="w-14 h-1.5 bg-[#0b0c0f] border border-white/10 hidden sm:block">
+              <div id="stat-progress-bar" class="h-full bg-[#e59a3c] transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between lg:justify-start lg:gap-3 border-r border-white/10 pr-3">
+          <span class="text-[11px] uppercase tracking-wider text-[#9ca0ab]">Toplam Süre</span>
+          <span id="stat-hours" class="font-mono text-sm font-bold text-[#f2efe9]">0.0 sa</span>
+        </div>
+
+        <div class="flex items-center justify-between lg:justify-start lg:gap-3">
+          <span class="text-[11px] uppercase tracking-wider text-[#9ca0ab]">Ortalama Puan</span>
+          <span id="stat-rating" class="font-mono text-sm font-bold text-[#e59a3c]">— / 10</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================= -->
+  <!-- ANA İÇERİK ALANI                                          -->
+  <!-- ========================================================= -->
+  <main class="flex-1 max-w-[1380px] w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- ======================================================= -->
+    <!-- GÖRÜNÜM 1: KÜTÜPHANE (LIBRARY VIEW)                     -->
+    <!-- ======================================================= -->
+    <section id="view-library" class="space-y-5">
+      <!-- Filtreleme & Arama Kontrol Paneli -->
+      <div class="sharp-panel p-4 space-y-3.5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <!-- Kategori Sekmeleri -->
+          <div class="inline-flex bg-[#0b0c0f] border border-white/10 p-0.5 rounded-[2px] self-start overflow-x-auto max-w-full">
+            <button type="button" data-cat="all" class="filter-cat-btn px-3 py-1.5 text-xs font-semibold uppercase tracking-wider bg-[#1a1d24] text-[#f2efe9] border border-white/15 rounded-[1px] whitespace-nowrap">
+              Tümü <span id="cnt-cat-all" class="font-mono text-[11px] text-[#9ca0ab] ml-1">26</span>
+            </button>
+            <button type="button" data-cat="official" class="filter-cat-btn px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#9ca0ab] hover:text-[#f2efe9] border border-transparent rounded-[1px] whitespace-nowrap">
+              Orijinal Oyunlar <span id="cnt-cat-official" class="font-mono text-[11px] opacity-75 ml-1">14</span>
+            </button>
+            <button type="button" data-cat="fangame" class="filter-cat-btn px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#9ca0ab] hover:text-[#f2efe9] border border-transparent rounded-[1px] whitespace-nowrap">
+              Fan Oyunları <span id="cnt-cat-fangame" class="font-mono text-[11px] opacity-75 ml-1">12</span>
+            </button>
+          </div>
+
+          <!-- Arama & Sıralama -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1 lg:max-w-xl">
+            <div class="relative flex-1">
+              <svg class="w-4 h-4 text-[#9ca0ab] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <path stroke-linecap="square" d="M20 20l-3.5-3.5" />
+              </svg>
+              <input id="search-input" type="text" placeholder="Oyun adı, yapımcı, katalog kodu veya animatronik ara..."
+                class="w-full pl-9 pr-3 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs sm:text-sm text-[#f2efe9] placeholder-[#9ca0ab]/60 rounded-[2px]" />
+            </div>
+
+            <select id="sort-select"
+              class="px-3 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs sm:text-sm text-[#f2efe9] rounded-[2px] cursor-pointer">
+              <option value="default">Sıralama: Arşiv Sırası</option>
+              <option value="year-desc">Çıkış Yılı (Yeni → Eski)</option>
+              <option value="year-asc">Çıkış Yılı (Eski → Yeni)</option>
+              <option value="progress-desc">İlerleme % (Yüksek → Düşük)</option>
+              <option value="rating-desc">Puan (Yüksek → Düşük)</option>
+              <option value="hours-desc">Oynama Süresi (Çok → Az)</option>
+              <option value="name-asc">İsim (A → Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Alt Filtre Satırı: Durum + Platform / Steam -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2 border-t border-white/10">
+          <!-- Durum Filtresi -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <span class="text-[11px] font-mono uppercase tracking-wider text-[#9ca0ab] mr-1 shrink-0">Durum:</span>
+            <button type="button" data-status="all" class="filter-status-btn px-2.5 py-1 text-xs font-semibold bg-[#f2efe9] text-[#0b0c0f] rounded-[1px] shrink-0">Tümü</button>
+            <button type="button" data-status="playing" class="filter-status-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#e59a3c] border border-white/10 rounded-[1px] shrink-0">Oynanıyor</button>
+            <button type="button" data-status="completed" class="filter-status-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#3ba56b] border border-white/10 rounded-[1px] shrink-0">Bitirildi</button>
+            <button type="button" data-status="planned" class="filter-status-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#f2efe9] border border-white/10 rounded-[1px] shrink-0">Sırada</button>
+            <button type="button" data-status="dropped" class="filter-status-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#c93b3b] border border-white/10 rounded-[1px] shrink-0">Bırakıldı</button>
+          </div>
+
+          <!-- Platform / Steam Filtresi -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <span class="text-[11px] font-mono uppercase tracking-wider text-[#9ca0ab] mr-1 shrink-0">Platform:</span>
+            <button type="button" data-platform="all" class="filter-platform-btn px-2.5 py-1 text-xs font-semibold bg-[#f2efe9] text-[#0b0c0f] rounded-[1px] shrink-0">Tümü</button>
+            <button type="button" data-platform="steam" class="filter-platform-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#66c0f4] border border-white/10 rounded-[1px] shrink-0">Steam'de Var</button>
+            <button type="button" data-platform="owned" class="filter-platform-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#66c0f4] border border-white/10 rounded-[1px] shrink-0">Steam Kütüphanemde</button>
+            <button type="button" data-platform="gamejolt" class="filter-platform-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#f2efe9] border border-white/10 rounded-[1px] shrink-0">GameJolt / Ücretsiz</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oyun Kartları Izgarası (2:3 Poster Kapaklı Kartlar) -->
+      <div id="games-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- JS ile oluşturulur -->
+      </div>
+
+      <!-- Boş Sonuç Durumu -->
+      <div id="empty-state" class="hidden sharp-panel p-10 text-center space-y-3">
+        <p class="text-sm font-bold text-[#f2efe9] uppercase tracking-wider">Arşivde Eşleşen Kayıt Bulunamadı</p>
+        <p class="text-xs text-[#9ca0ab] max-w-md mx-auto">Seçili durum, platform veya arama filtrelerini sıfırlayabilir ya da sağ üstten yeni bir oyun ekleyebilirsin.</p>
+        <button id="btn-reset-filters" type="button" class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#e59a3c] text-[#0b0c0f] rounded-[2px]">
+          Filtreleri Sıfırla
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================= -->
+    <!-- GÖRÜNÜM 3: STEAM EŞLEŞTİRME (STEAM MATCHER)             -->
+    <!-- ======================================================= -->
+    <section id="view-steam" class="hidden space-y-5">
+      <!-- Steam Senkronizasyon Paneli -->
+      <div class="grid grid-cols-1 gap-4">
+        <!-- Mod 2: Steam Oyun Listesi Yapıştır & Otomatik Eşleştir -->
+        <div class="sharp-panel p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 bg-[#e59a3c]"></span>
+              <h2 class="text-xs font-mono font-bold uppercase tracking-wider text-[#f2efe9]">Steam Oyun Listesini Yapıştır &amp; Eşleştir</h2>
+            </div>
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 bg-[#e59a3c]/15 text-[#e59a3c] border border-[#e59a3c]/30">SÜRE + APPID DESTEKLİ</span>
+          </div>
+
+          <p class="text-xs text-[#9ca0ab] leading-relaxed">
+            Steam Profilin &rarr; <span class="text-[#f2efe9]">Oyunlar (Games)</span> sayfasındaki metni (<span class="font-mono text-[#f2efe9]">Ctrl+A, Ctrl+C</span>) kopyalayıp aşağıya yapıştır veya sahip olduğun FNaF oyunlarını/AppID'lerini yaz. Sistem oynama sürelerini (<span class="font-mono text-[#f2efe9]">hrs on record</span>) otomatik ayıklar.
+          </p>
+
+          <a href="https://steamcommunity.com/my/games?tab=all" target="_blank" rel="noopener noreferrer" class="inline-block text-[11px] font-mono text-[#66c0f4] hover:underline">Steam oyun listemi aç (kendi hesabınla) &rarr;</a>
+
+          <textarea id="steam-paste-input" rows="4"
+            placeholder="Örnek yapıştırma:&#10;Five Nights at Freddy's 12.4 hrs on record&#10;Five Nights at Freddy's: Security Breach 34.2 hrs on record&#10;332800, 871720"
+            class="w-full p-3 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs font-mono text-[#f2efe9] placeholder-[#9ca0ab]/50 rounded-[2px] resize-none"></textarea>
+
+          <div class="flex items-center justify-between gap-2">
+            <button id="btn-steam-sample" type="button" class="text-[11px] font-mono text-[#9ca0ab] hover:text-[#f2efe9] underline underline-offset-4">
+              Örnek Steam metni doldur
+            </button>
+            <button id="btn-steam-parse" type="button"
+              class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#e59a3c] hover:bg-[#f0a84b] text-[#0b0c0f] rounded-[2px] transition">
+              Metni Çözümle &amp; Eşleştir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eşleştirme Önizleme Alanı (Sadece eşleşme bulunduğunda görünür) -->
+      <div id="steam-preview-box" class="hidden sharp-elevated p-5 space-y-4 border-[#66c0f4]/40">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-[#f2efe9] uppercase tracking-wider">Bulunan Steam Eşleşmeleri</h3>
+            <p id="steam-preview-subtitle" class="text-xs text-[#9ca0ab]">Aşağıdaki oyunlar kütüphanende işaretlenecek ve varsa oynama süreleri aktarılacak.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-steam-cancel-preview" type="button" class="px-3 py-1.5 text-xs bg-[#0b0c0f] text-[#9ca0ab] border border-white/10 rounded-[2px]">
+              Vazgeç
+            </button>
+            <button id="btn-steam-apply-matches" type="button" class="px-4 py-1.5 text-xs font-bold uppercase tracking-wider bg-[#3ba56b] hover:bg-[#46b879] text-[#0b0c0f] rounded-[2px]">
+              Seçilenleri Kütüphaneye Uygula
+            </button>
+          </div>
+        </div>
+
+        <div id="steam-preview-list" class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <!-- JS ile doldurulur -->
+        </div>
+      </div>
+
+      <!-- Steam Uyumlu Tüm Oyunlar Eşleştirme Tablosu -->
+      <div class="sharp-panel overflow-hidden">
+        <div class="px-4 py-3 border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-[#f2efe9]">Steam Veritabanı &amp; AppID Eşleştirme Tablosu</h3>
+            <p class="text-[11px] text-[#9ca0ab]">Resmi Steam mağaza sayfaları, başarım bağlantıları ve kütüphane sahiplik durumu</p>
+          </div>
+          <span id="steam-owned-summary" class="font-mono text-xs text-[#66c0f4] bg-[#66c0f4]/10 border border-[#66c0f4]/30 px-2.5 py-1">
+            0 / 15 Steam Oyunu Sahip Olunan
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-white/10 bg-[#0b0c0f] text-[11px] font-mono uppercase tracking-wider text-[#9ca0ab]">
+                <th class="py-2.5 px-4">Katalog</th>
+                <th class="py-2.5 px-4">Oyun Adı</th>
+                <th class="py-2.5 px-4">Steam AppID</th>
+                <th class="py-2.5 px-4">Sahiplik</th>
+                <th class="py-2.5 px-4">Kayıtlı Süre</th>
+                <th class="py-2.5 px-4 text-right">Mağaza &amp; Başarımlar</th>
+              </tr>
+            </thead>
+            <tbody id="steam-table-body" class="divide-y divide-white/10 text-xs">
+              <!-- JS ile doldurulur -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Alt Bilgi -->
+  <footer class="border-t border-white/10 py-4 mt-8 bg-[#0b0c0f]">
+    <div class="max-w-[1380px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-[#9ca0ab]">
+      <span>FAZTRACKER · FNAF ARŞİVİ</span>
+      <span>YEREL DEPOLAMA AKTİF · TÜM VERİLER TARAYICIDA SAKLANIR</span>
+    </div>
+  </footer>
+
+  <!-- ========================================================= -->
+  <!-- OYUN DETAY MODALI (BİLGİ + TEHDİT REHBERİ + KAPAK + STEAM) -->
+  <!-- ========================================================= -->
+  <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-xs overflow-y-auto">
+    <div class="sharp-elevated w-full max-w-5xl my-auto shadow-2xl overflow-hidden">
+      <!-- Modal Üst Çubuk -->
+      <div class="px-5 py-3.5 bg-[#13151a] border-b border-white/10 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="modal-catalog-badge" class="font-mono text-xs font-bold px-2 py-0.5 bg-[#0b0c0f] text-[#e59a3c] border border-white/15 shrink-0">FNAF-01</span>
+          <h2 id="modal-title" class="text-base sm:text-lg font-extrabold text-[#f2efe9] truncate">Five Nights at Freddy's</h2>
+          <span id="modal-year-badge" class="font-mono text-xs text-[#9ca0ab] shrink-0">(2014)</span>
+        </div>
+        <button id="btn-close-detail" type="button" aria-label="Kapat"
+          class="w-8 h-8 bg-[#0b0c0f] hover:bg-[#c93b3b] text-[#f2efe9] border border-white/15 flex items-center justify-center transition shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="square" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- İki Sütunlu Modal İçeriği -->
+      <div class="p-4 sm:p-6 max-h-[82vh] overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- SOL SÜTUN (4/12): 2:3 Poster Kapak + Steam + Durum & Sayaçlar -->
+        <div class="lg:col-span-4 space-y-4">
+          <!-- 2:3 Poster Önizleme & Özel Kapak Kontrolleri (Feature #6) -->
+          <div class="sharp-panel p-3 space-y-3">
+            <div class="w-44 sm:w-48 mx-auto aspect-[2/3] bg-[#0b0c0f] border border-white/15 overflow-hidden relative" id="modal-poster-preview">
+              <!-- JS ile SVG veya özel görsel yüklenir -->
+            </div>
+
+            <div class="space-y-2 pt-1">
+              <div class="flex items-center gap-1.5">
+                <label for="cover-file-input"
+                  class="flex-1 cursor-pointer text-center px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider bg-[#0b0c0f] hover:bg-[#e59a3c] text-[#f2efe9] hover:text-[#0b0c0f] border border-white/15 transition">
+                  Dosyadan Kapak Yükle
+                  <input id="cover-file-input" type="file" accept="image/*" class="hidden" />
+                </label>
+                <button id="btn-reset-cover" type="button" title="Varsayılan postere dön"
+                  class="px-2.5 py-1.5 text-[11px] font-mono bg-[#0b0c0f] hover:bg-[#c93b3b]/20 text-[#9ca0ab] hover:text-[#c93b3b] border border-white/15 transition">
+                  Sıfırla
+                </button>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                <input id="cover-url-input" type="url" placeholder="Veya kapak görseli URL yapıştır..."
+                  class="flex-1 px-2.5 py-1 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-[11px] text-[#f2efe9] placeholder-[#9ca0ab]/60" />
+                <button id="btn-apply-cover-url" type="button"
+                  class="px-2.5 py-1 text-[11px] font-semibold bg-[#13151a] hover:bg-[#e59a3c] text-[#f2efe9] hover:text-[#0b0c0f] border border-white/15 transition">
+                  Uygula
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Steam Entegrasyon Paneli -->
+          <div id="modal-steam-panel" class="sharp-panel p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-[#66c0f4]">Steam Entegrasyonu</span>
+              <span id="modal-steam-appid" class="font-mono text-[11px] text-[#9ca0ab]">AppID: 319510</span>
+            </div>
+
+            <label class="flex items-center gap-2.5 p-2 bg-[#0b0c0f] border border-white/10 cursor-pointer">
+              <input id="modal-steam-owned" type="checkbox" class="w-4 h-4 accent-[#66c0f4] cursor-pointer" />
+              <span class="text-xs font-medium text-[#f2efe9]">Steam Kütüphanemde Var</span>
+            </label>
+
+            <div id="modal-steam-links" class="grid grid-cols-2 gap-1.5 pt-0.5">
+              <a id="modal-link-store" href="#" target="_blank" rel="noopener noreferrer"
+                class="text-center px-2 py-1.5 text-[11px] font-mono bg-[#0b0c0f] hover:bg-[#66c0f4] text-[#66c0f4] hover:text-[#0b0c0f] border border-[#66c0f4]/30 transition">
+                Steam Mağaza &rarr;
+              </a>
+              <a id="modal-link-achievements" href="#" target="_blank" rel="noopener noreferrer"
+                class="text-center px-2 py-1.5 text-[11px] font-mono bg-[#0b0c0f] hover:bg-[#66c0f4] text-[#66c0f4] hover:text-[#0b0c0f] border border-[#66c0f4]/30 transition">
+                Başarımlar &rarr;
+              </a>
+            </div>
+          </div>
+
+          <!-- Durum, Puan, Süre, Jumpscare & Bitirme Tarihi -->
+          <div class="sharp-panel p-3.5 space-y-3">
+            <div>
+              <label for="modal-status-select" class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Oyun Durumu</label>
+              <select id="modal-status-select" class="w-full px-3 py-1.5 bg-[#0b0c0f] border border-white/15 focus:border-[#e59a3c] focus:outline-none text-xs font-semibold text-[#f2efe9]">
+                <option value="planned">Sırada (Oynanacak)</option>
+                <option value="playing">Oynanıyor</option>
+                <option value="completed">Bitirildi (%100)</option>
+                <option value="dropped">Bırakıldı</option>
+              </select>
+            </div>
+
+            <!-- 1-10 Yıldız Puanlama -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-mono uppercase text-[#9ca0ab]">Puanın</span>
+                <span id="modal-rating-label" class="font-mono text-xs font-bold text-[#e59a3c]">Puanlanmadı</span>
+              </div>
+              <div id="modal-star-row" class="flex items-center justify-between bg-[#0b0c0f] border border-white/10 px-2 py-1.5">
+                <!-- 1-10 SVG yıldız butonları -->
+              </div>
+            </div>
+
+            <!-- Oynama Süresi & Jumpscare Sayacı -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label for="modal-hours-input" class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Süre (Saat)</label>
+                <input id="modal-hours-input" type="number" min="0" step="0.5" value="0"
+                  class="w-full px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none font-mono text-xs font-bold text-[#f2efe9]" />
+              </div>
+
+              <div>
+                <span class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Jumpscare</span>
+                <div class="flex items-center bg-[#0b0c0f] border border-white/10 h-[30px]">
+                  <button id="btn-jumpscare-minus" type="button" class="w-8 h-full text-xs font-bold text-[#9ca0ab] hover:text-[#f2efe9] hover:bg-white/5">-</button>
+                  <span id="modal-jumpscare-val" class="flex-1 text-center font-mono text-xs font-bold text-[#c93b3b]">0</span>
+                  <button id="btn-jumpscare-plus" type="button" class="w-8 h-full text-xs font-bold text-[#c93b3b] hover:bg-[#c93b3b]/20">+1</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bitirme Tarihi -->
+            <div>
+              <label for="modal-completed-date" class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Bitirme Tarihi</label>
+              <input id="modal-completed-date" type="date"
+                class="w-full px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none font-mono text-xs text-[#f2efe9]" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SAĞ SÜTUN (8/12): Genel Amaç + Tehdit Rehberi + Gece Kontrol Listesi + Notlar -->
+        <div class="lg:col-span-8 space-y-4">
+
+          <!-- 1. Genel Amaç, Hikâye Özeti & Oynanış Mekanikleri -->
+          <div class="sharp-panel p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+              <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#e59a3c]">Genel Amaç &amp; Oyun Özeti</span>
+              <div id="modal-mechanics-badges" class="flex flex-wrap items-center gap-1.5">
+                <!-- Mekanik etiketleri -->
+              </div>
+            </div>
+            <p id="modal-objective" class="text-xs sm:text-sm text-[#f2efe9] leading-relaxed font-medium"></p>
+            <p id="modal-story" class="text-xs text-[#9ca0ab] leading-relaxed border-t border-white/10 pt-2.5"></p>
+          </div>
+
+          <!-- 2. Animatronik & Mekanik Tehdit Rehberi (Feature #2) -->
+          <div class="sharp-panel p-4 space-y-3 border-l-2 border-l-[#c93b3b]">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#c93b3b]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="square" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-[#f2efe9]">Animatronik &amp; Mekanik Tehdit Rehberi</h3>
+              </div>
+              <span id="modal-threat-count" class="font-mono text-[11px] text-[#9ca0ab]">5 Tehdit</span>
+            </div>
+
+            <div id="modal-threats-list" class="space-y-2">
+              <!-- JS ile doldurulur -->
+            </div>
+
+            <!-- Özel Tehdit Notu Ekleme Formu -->
+            <div class="pt-2 border-t border-white/10 grid grid-cols-1 sm:grid-cols-12 gap-2">
+              <input id="new-threat-name" type="text" placeholder="Animatronik / Tehdit adı..."
+                class="sm:col-span-4 px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#c93b3b] focus:outline-none text-xs text-[#f2efe9] placeholder-[#9ca0ab]/60" />
+              <input id="new-threat-counter" type="text" placeholder="Nasıl durdurulur / hayatta kalma taktiği..."
+                class="sm:col-span-6 px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#c93b3b] focus:outline-none text-xs text-[#f2efe9] placeholder-[#9ca0ab]/60" />
+              <button id="btn-add-threat" type="button"
+                class="sm:col-span-2 px-3 py-1.5 text-xs font-bold uppercase bg-[#0b0c0f] hover:bg-[#c93b3b] text-[#f2efe9] border border-white/15 transition">
+                + Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Gece, Bölüm & Özel Son Kontrol Listesi -->
+          <div class="sharp-panel p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+              <div class="flex items-center gap-2">
+                <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-[#f2efe9]">Gece, Bölüm &amp; Özel Son Kontrol Listesi</h3>
+                <span id="modal-steps-counter" class="font-mono text-xs text-[#3ba56b]">0/0</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btn-sync-steps" type="button" class="hidden text-[11px] font-mono text-[#e59a3c] hover:underline">
+                  Adımlara Eşitle
+                </button>
+                <span id="modal-progress-pct" class="font-mono text-sm font-bold text-[#e59a3c]">%0</span>
+              </div>
+            </div>
+
+            <!-- Manuel Yüzde Kaydırıcı -->
+            <div class="flex items-center gap-3 bg-[#0b0c0f] border border-white/10 px-3 py-2">
+              <span class="text-[11px] font-mono text-[#9ca0ab] shrink-0">İlerleme:</span>
+              <input id="modal-progress-slider" type="range" min="0" max="100" value="0" class="flex-1" />
+            </div>
+
+            <!-- Adım Kutucukları -->
+            <div id="modal-steps-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <!-- JS ile doldurulur -->
+            </div>
+
+            <!-- Yeni Gece / Görev Ekle -->
+            <div class="flex items-center gap-2 pt-1">
+              <input id="new-step-input" type="text" placeholder="Yeni gece, meydan okuma veya son ekle (örn. 50/20 Mode)..."
+                class="flex-1 px-3 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs text-[#f2efe9] placeholder-[#9ca0ab]/60" />
+              <button id="btn-add-step" type="button"
+                class="px-3.5 py-1.5 text-xs font-bold uppercase bg-[#0b0c0f] hover:bg-[#e59a3c] text-[#f2efe9] hover:text-[#0b0c0f] border border-white/15 transition shrink-0">
+                + Adım Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. Kişisel Notlar & Silme İşlemi -->
+          <div class="sharp-panel p-4 space-y-3">
+            <label for="modal-notes" class="block text-xs font-mono font-bold uppercase tracking-wider text-[#9ca0ab]">Kişisel Notlar &amp; Taktik Kayıtları</label>
+            <textarea id="modal-notes" rows="2" placeholder="Oyunla ilgili notların, kalan gizli sonlar veya zorluk yorumların..."
+              class="w-full p-2.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs text-[#f2efe9] placeholder-[#9ca0ab]/60 resize-none"></textarea>
+
+            <div class="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <button id="btn-delete-game-prompt" type="button" class="px-3 py-1.5 text-xs font-mono text-[#c93b3b] hover:bg-[#c93b3b]/15 border border-transparent hover:border-[#c93b3b]/40 transition">
+                  Oyunu Arşivden Sil
+                </button>
+                <div id="delete-game-confirm" class="hidden items-center gap-2">
+                  <span class="text-xs text-[#c93b3b]">Kalıcı olarak silinsin mi?</span>
+                  <button id="btn-delete-game-yes" type="button" class="px-3 py-1 text-xs font-bold bg-[#c93b3b] text-white">Evet, Sil</button>
+                  <button id="btn-delete-game-no" type="button" class="px-2.5 py-1 text-xs bg-[#0b0c0f] text-[#9ca0ab] border border-white/10">Vazgeç</button>
+                </div>
+              </div>
+
+              <button id="btn-modal-save-close" type="button" class="px-5 py-1.5 text-xs font-bold uppercase tracking-wider bg-[#e59a3c] hover:bg-[#f0a84b] text-[#0b0c0f] transition ml-auto">
+                Kaydet ve Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- YENİ OYUN EKLEME MODALI                                   -->
+  <!-- ========================================================= -->
+  <div id="add-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-xs overflow-y-auto">
+    <div class="sharp-elevated w-full max-w-lg p-5 space-y-4 my-auto">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div>
+          <h2 class="text-base font-extrabold uppercase tracking-wider text-[#f2efe9]">Yeni Oyun Ekle</h2>
+          <p class="text-xs text-[#9ca0ab]">Orijinal veya fan yapımı yeni bir FNaF oyununu arşive ekle</p>
+        </div>
+        <button id="btn-close-add" type="button" class="w-8 h-8 bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#f2efe9] border border-white/10 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="square" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="add-game-form" class="space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Oyun Adı *</label>
+            <input id="add-title" type="text" required placeholder="Örn: Post-Shift 2"
+              class="w-full px-3 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs text-[#f2efe9]" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Katalog Kodu</label>
+            <input id="add-catalog" type="text" placeholder="FAN-13"
+              class="w-full px-3 py-1.5 bg-[#0b0c0f] border border-white/10 focus:border-[#e59a3c] focus:outline-none text-xs font-mono uppercase text-[#f2efe9]" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Kategori</label>
+            <select id="add-category" class="w-full px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 text-xs text-[#f2efe9]">
+              <option value="fangame">Fan Oyunu</option>
+              <option value="official">Orijinal Oyun</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Çıkış Yılı</label>
+            <input id="add-year" type="text" value="2026"
+              class="w-full px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 text-xs font-mono text-[#f2efe9]" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Steam AppID</label>
+            <input id="add-appid" type="text" placeholder="Opsiyonel"
+              class="w-full px-2.5 py-1.5 bg-[#0b0c0f] border border-white/10 text-xs font-mono text-[#f2efe9]" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Yapımcı</label>
+          <input id="add-dev" type="text" placeholder="Örn: Rjac25"
+            class="w-full px-3 py-1.5 bg-[#0b0c0f] border border-white/10 text-xs text-[#f2efe9]" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Genel Amaç</label>
+          <textarea id="add-objective" rows="2" placeholder="Oyundaki temel hayatta kalma veya görev amacı..."
+            class="w-full px-3 py-1.5 bg-[#0b0c0f] border border-white/10 text-xs text-[#f2efe9] resize-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-mono uppercase text-[#9ca0ab] mb-1">Geceler / Bölümler (Virgülle ayır)</label>
+          <input id="add-steps" type="text" placeholder="Night 1, Night 2, Night 3, Night 4, Night 5, Night 6"
+            class="w-full px-3 py-1.5 bg-[#0b0c0f] border border-white/10 text-xs text-[#f2efe9]" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+          <button id="btn-cancel-add" type="button" class="px-4 py-1.5 text-xs bg-[#0b0c0f] text-[#9ca0ab] border border-white/10">Vazgeç</button>
+          <button type="submit" class="px-5 py-1.5 text-xs font-bold uppercase tracking-wider bg-[#e59a3c] text-[#0b0c0f]">Arşive Ekle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- YEDEKLE / İÇE AKTAR & SIFIRLA MODALI                      -->
+  <!-- ========================================================= -->
+  <div id="backup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-xs">
+    <div class="sharp-elevated w-full max-w-md p-5 space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-[#f2efe9]">Veri Yönetimi &amp; Yedekleme</h2>
+        <button id="btn-close-backup" type="button" class="w-7 h-7 bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#f2efe9] border border-white/10 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="square" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-2.5">
+        <button id="btn-export-json" type="button"
+          class="w-full px-4 py-2.5 text-xs font-semibold uppercase tracking-wider bg-[#13151a] hover:bg-[#e59a3c] text-[#f2efe9] hover:text-[#0b0c0f] border border-white/15 transition text-left flex items-center justify-between">
+          <span>JSON Yedeği İndir (Oyunlar)</span>
+          <span class="font-mono">&darr;</span>
+        </button>
+
+        <label for="input-import-json"
+          class="w-full cursor-pointer px-4 py-2.5 text-xs font-semibold uppercase tracking-wider bg-[#13151a] hover:bg-[#66c0f4] text-[#f2efe9] hover:text-[#0b0c0f] border border-white/15 transition flex items-center justify-between">
+          <span>JSON Yedeği Yükle</span>
+          <span class="font-mono">&uarr;</span>
+          <input id="input-import-json" type="file" accept=".json" class="hidden" />
+        </label>
+      </div>
+
+      <div class="pt-3 border-t border-white/10 space-y-2">
+        <p class="text-[11px] text-[#9ca0ab]">Tüm ilerleme verilerini silip 26 oyunluk varsayılan arşive dönmek için:</p>
+        <button id="btn-factory-reset-prompt" type="button" class="px-3 py-1.5 text-xs font-mono text-[#c93b3b] border border-[#c93b3b]/40 hover:bg-[#c93b3b]/15">
+          Varsayılan Arşive Sıfırla
+        </button>
+        <div id="factory-reset-confirm" class="hidden items-center gap-2 pt-1">
+          <span class="text-xs text-[#c93b3b]">Tüm kayıtlar silinecek, emin misin?</span>
+          <button id="btn-factory-reset-yes" type="button" class="px-3 py-1 text-xs font-bold bg-[#c93b3b] text-white">Sıfırla</button>
+          <button id="btn-factory-reset-no" type="button" class="px-2.5 py-1 text-xs bg-[#0b0c0f] text-[#9ca0ab] border border-white/10">İptal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bildirim Toast Kutusu -->
+  <div id="toast" class="fixed bottom-4 right-4 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-150">
+    <div class="px-3.5 py-2 bg-[#1a1d24] border border-white/20 text-xs font-mono text-[#f2efe9] flex items-center gap-2 shadow-xl">
+      <span id="toast-indicator" class="w-2 h-2 bg-[#3ba56b]"></span>
+      <span id="toast-text">Kaydedildi</span>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * FAZTRACKER v2
+     * Tek Dosyalı FNaF & Fan Oyunu Takip Arşivi
+     * Özellikler: Kütüphane, 2:3 Özel Poster Kapakları, Animatronik Tehdit Rehberi & Steam Eşleştirme
+     */
+    const STORAGE_KEY_V2 = 'fazbear_tracker_v2';
+    const LEGACY_KEYS = ['fazbear_tracker_v1', 'fazbearTrackerData'];
+
+    const DEFAULT_GAMES = [
+      // ==================== 14 ORİJİNAL FNAF OYUNU ====================
+      {
+        id: 'fnaf-1',
+        catalogCode: 'FNAF-01',
+        title: "Five Nights at Freddy's",
+        category: 'official',
+        year: '2014',
+        developer: 'Scott Cawthon',
+        steamAppId: '319510',
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'bear',
+        objective: 'Gece 12:00 ile sabah 06:00 arasında sınırlı elektrik gücünü idare ederek güvenlik kameralarından animatronikleri izlemek; kapı ve ışıkları doğru anda kullanıp 5 gece hayatta kalmak.',
+        story: 'Freddy Fazbear’s Pizza’da gece bekçisi Mike Schmidt olarak işe başlarsın. Geceleri serbest dolaşım moduna geçen dört ana maskotun ofise girmesini engellemen gerekir.',
+        mechanics: ['Kamera Takibi', 'Enerji Yönetimi', 'Kapı Kontrolü'],
+        threats: [
+          { name: 'Freddy Fazbear', counter: 'Karanlıkta sağ koridordan ilerler; kamerada ona sık sık bakarak hareketini dondur ve sağ kapıyı kontrol et.' },
+          { name: 'Bonnie', counter: 'Sol koridordan gelir; kapı ışığını yakıp kapıda gördüğünde sol kapıyı hemen kapat.' },
+          { name: 'Chica', counter: 'Sağ koridordan ve mutfaktan gelir; kapı ışığında göründüğünde sağ kapıyı kapat.' },
+          { name: 'Foxy', counter: 'Pirate Cove (CAM 1C) kamerasını düzenli kontrol et; perdeden çıkıp koşmaya başlarsa sol kapıyı anında kapat.' },
+          { name: 'Golden Freddy', counter: 'Ofiste belirdiğinde halüsinasyondan kurtulmak için kamerayı hemen açıp kapat.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1', done: false },
+          { id: 's2', label: 'Night 2', done: false },
+          { id: 's3', label: 'Night 3', done: false },
+          { id: 's4', label: 'Night 4', done: false },
+          { id: 's5', label: 'Night 5 (Ana Son)', done: false },
+          { id: 's6', label: 'Night 6', done: false },
+          { id: 's7', label: '4/20 Mode (Custom Night)', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-2',
+        catalogCode: 'FNAF-02',
+        title: "Five Nights at Freddy's 2",
+        category: 'official',
+        year: '2014',
+        developer: 'Scott Cawthon',
+        steamAppId: '332800',
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'mask',
+        objective: 'Ofis kapıları olmadan; Freddy maskesini zamanında takarak, koridora el feneri tutarak ve Puppet’ın müzik kutusunu sürekli kurulu tutarak 11 animatroniği sabah 6’ya kadar durdurmak.',
+        story: '1987 yılında yenilenen pizzacıda Toy ve eski Withered animatroniklere karşı çok daha yüksek tempolu bir gece vardiyası yürütürsün.',
+        mechanics: ['Freddy Maskesi', 'Müzik Kutusu', 'El Feneri'],
+        threats: [
+          { name: 'Withered Animatronics', counter: 'Kamerayı indirdiğin an ofis içinde belirirler; saliseler içinde Freddy maskesini tak.' },
+          { name: 'Toy Animatronics', counter: 'Havalandırma çıkışlarında ve koridorda belirdiklerinde Freddy maskesini takarak onları kandır.' },
+          { name: 'The Puppet', counter: 'Prize Corner (CAM 11) kamerasındaki müzik kutusunu asla tamamen boşaltmadan sürekli sar.' },
+          { name: 'Withered Foxy', counter: 'Maskeye kanmaz; ana koridorda göründüğünde el fenerini aralıklarla yüzüne tut.' },
+          { name: 'Balloon Boy', counter: 'Sol havalandırma çıkışında göründüğünde maskeyi tak; içeri girerse fener pillerini devre dışı bırakır.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–3', done: false },
+          { id: 's2', label: 'Night 4–5', done: false },
+          { id: 's3', label: 'Night 6', done: false },
+          { id: 's4', label: '10/20 Mode (Golden Freddy)', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-3',
+        catalogCode: 'FNAF-03',
+        title: "Five Nights at Freddy's 3",
+        category: 'official',
+        year: '2015',
+        developer: 'Scott Cawthon',
+        steamAppId: '354140',
+        steamOwned: false,
+        accent: '#3ba56b',
+        emblem: 'spring',
+        objective: 'Ses sistemini kullanarak Springtrap’i ofisten uzak odalara çekmek, havalandırma kanallarını mühürlemek ve bozulan sistemleri yeniden başlatıp Good Ending’e ulaşmak.',
+        story: 'Olaylardan 30 yıl sonra açılan korku evi Fazbear’s Fright’ta tek gerçek animatronik olan Springtrap ile karşı karşıya kalırsın.',
+        mechanics: ['Ses Yönlendirme', 'Sistem Onarımı', 'Havalandırma Mühürleme'],
+        threats: [
+          { name: 'Springtrap', counter: 'Bulunduğu odaya komşu kameradan ses çalarak uzaklaştır; havalandırmaya girerse ilgili kanala çift tıklayıp mühürle.' },
+          { name: 'Phantom Freddy & Chica', counter: 'Pencere önünde yürürken veya arcade ekranında göründüklerinde bakışını kaçırıp monitörü aç.' },
+          { name: 'Phantom Balloon Boy & Foxy', counter: 'Kamera ekranında BB belirirse hemen kamera değiştir; ofis solunda Foxy varsa monitöre dön.' },
+          { name: 'Havalandırma & Ses Sistemleri', counter: 'Arıza verdiğinde sol panelden yeniden başlat; havalandırma hatası görüşünü karartır.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Bad Ending', done: false },
+          { id: 's3', label: 'Good Ending (Mini Oyunlar)', done: false },
+          { id: 's4', label: 'Nightmare Mode', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-4',
+        catalogCode: 'FNAF-04',
+        title: "Five Nights at Freddy's 4",
+        category: 'official',
+        year: '2015',
+        developer: 'Scott Cawthon',
+        steamAppId: '388090',
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'fangs',
+        objective: 'Kamera olmadan tamamen kulaklıkla nefes seslerini dinleyerek yatak odasının iki kapısını, dolabı ve yatağı el feneriyle kontrol edip Nightmare animatroniklerden korunmak.',
+        story: 'Bir çocuğun yatak odasında kâbus boyutundaki animatroniklere karşı sadece ses ipuçları ve el feneriyle hayatta kalmaya çalışırsın.',
+        mechanics: ['Ses Dinleme', 'El Feneri', 'Refleks Kontrolü'],
+        threats: [
+          { name: 'Nightmare Bonnie & Chica', counter: 'Kapıya koşup 2 saniye dinle; nefes sesi duyarsan kapıyı kapalı tut, duymuyorsan fener yak.' },
+          { name: 'Nightmare Foxy', counter: 'Odaya sızıp dolaba girerse dolap kapısını kapatarak peluşa dönüşene kadar bekle.' },
+          { name: 'Nightmare Fredbear / Nightmare', counter: 'Gülme ve ayak seslerini takip et; kapıdaysa fener yakıp kapat, yatakta veya dolaptaysa fenerle uzaklaştır.' },
+          { name: 'Plushtrap', counter: 'Geceler arası mini oyunda ayak seslerini dinleyip tam X işaretinin üzerindeyken fenerle yakala.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Night 6', done: false },
+          { id: 's3', label: 'Nightmare', done: false },
+          { id: 's4', label: '20/20/20/20 Mode', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-world',
+        catalogCode: 'FNAF-W',
+        title: 'FNaF World',
+        category: 'official',
+        year: '2016',
+        developer: 'Scott Cawthon',
+        steamAppId: '427920',
+        steamOwned: false,
+        accent: '#66c0f4',
+        emblem: 'orbit',
+        objective: 'Serideki karakterlerden oluşan 8 kişilik RPG takımını kurup Animatronica dünyasındaki bozulmaların kaynağını bulmak, bossları yenmek ve Clock Ending dahil tüm sonları açmak.',
+        story: 'Klasik korku formülünden ayrılan bu yan oyunda FNaF karakterleriyle sıra tabanlı RPG savaşlarına girersin.',
+        mechanics: ['Sıra Tabanlı RPG', 'Karakter Açma', 'Boss Savaşları'],
+        threats: [
+          { name: 'Security / Chipper’s Revenge', counter: 'Tek vuruşta öldüren saldırılara karşı Neon Wall ve Gift Boxes yeteneklerini aktif tut.' },
+          { name: 'Animdude', counter: 'Hard Mode finalinde yüksek alan hasarına karşı Mimic Ball ve Unscrew2/Cosmic Song kombinasyonu kullan.' },
+          { name: 'Chica’s Magic Rainbow', counter: 'Update 2 finalinde 3 dakikalık sayaç dolmadan Slasher ve yüksek seviye karakterlerle saldır.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Normal Ending', done: false },
+          { id: 's2', label: 'Hard Mode', done: false },
+          { id: 's3', label: 'Clock Ending', done: false },
+          { id: 's4', label: 'Update 2 Bosses', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-sl',
+        catalogCode: 'FNAF-SL',
+        title: "Five Nights at Freddy's: Sister Location",
+        category: 'official',
+        year: '2016',
+        developer: 'Scott Cawthon',
+        steamAppId: '506610',
+        steamOwned: false,
+        accent: '#a78bfa',
+        emblem: 'circus',
+        objective: 'Yer altındaki Circus Baby’s Entertainment and Rental tesisinde HandUnit’in talimatlarını yerine getirerek her gece farklı odalardaki bakım ve kaçış görevlerini tamamlamak.',
+        story: 'Sabit bir ofiste oturmak yerine havalandırmalardan sürünerek ilerlediğin, hikâye odaklı ve sinematik bir yer altı tesisi deneyimi sunar.',
+        mechanics: ['Görev Odaklı İlerleyiş', 'Ses & Gizlilik', 'Private Room'],
+        threats: [
+          { name: 'Ballora', counter: 'Ballora Gallery’de müzik kutusu sesi yaklaştığında yürümeyi tamamen durdur ve uzaklaşmasını bekle.' },
+          { name: 'Funtime Freddy & Bon-Bon', counter: 'Breaker Room’da panelleri doldururken Freddy yaklaşırsa sesli uyarıyı çal.' },
+          { name: 'Funtime Foxy', counter: 'Karanlık odada feneri kısa aralıklarla yakıp önün boşken hızlıca karşı kapıya ilerle.' },
+          { name: 'Bidybabs & Minireenas', counter: 'Masa altında metal kapağı sıkı tut; yaylı kostüm içinde kenarlardaki kilitleri sürekli sık.' },
+          { name: 'Ennard', counter: 'Private Room’da kameraları ve kapıları enerji bitmeden yönetip sabah 6’ya ulaş.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5 (Real Ending)', done: false },
+          { id: 's2', label: 'Private Room (Fake Ending)', done: false },
+          { id: 's3', label: 'Golden Freddy 10/20', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-ffps',
+        catalogCode: 'FFPS-06',
+        title: "Freddy Fazbear's Pizzeria Simulator",
+        category: 'official',
+        year: '2017',
+        developer: 'Scott Cawthon',
+        steamAppId: '738060',
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'triangle',
+        objective: 'Gündüzleri kendi pizzacını tasarlayıp yönetirken, geceleri havalandırma kanallarından yaklaşan kurtarılmış animatroniklere karşı bilgisayar görevlerini tamamlamak.',
+        story: 'İlk bakışta restoran işletme simülasyonu gibi görünse de arka planda Afton ailesi hikâyesini büyük bir finalle birleştirir.',
+        mechanics: ['Restoran Yönetimi', 'Havalandırma Savunması', 'Çoklu Son'],
+        threats: [
+          { name: 'Scrap Baby', counter: 'Havalandırmada ses duyduğunda fanı kapat, ses tuzağını yakındaki odaya kur ve havalandırma ağzına bak.' },
+          { name: 'Molten Freddy', counter: 'Gülme sesi duyduğunda yaklaştığı yöndeki havalandırma ızgarasına fener tutarak geri püskürt.' },
+          { name: 'Scraptrap', counter: 'Havalandırmada metalik hareket sesi duyduğunda görevi duraklatıp ızgaraya dön ve sesle uzaklaştır.' },
+          { name: 'Lefty', counter: 'Gürültü seviyesini düşük tut (sessiz fan ve reklamları atlama); yaklaşırsa ses tuzağı kullan.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Monday–Saturday', done: false },
+          { id: 's2', label: 'Completionist Ending', done: false },
+          { id: 's3', label: 'Insanity Ending', done: false },
+          { id: 's4', label: 'Lorekeeper Certificate', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-ucn',
+        catalogCode: 'FNAF-UCN',
+        title: 'Ultimate Custom Night',
+        category: 'official',
+        year: '2018',
+        developer: 'Scott Cawthon',
+        steamAppId: '871720',
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'grid50',
+        objective: 'Serinin farklı oyunlarından seçilen 50 animatroniğin yapay zekâ seviyelerini (0–20) ayarlayarak yüksek puan rekorları kırmak ve 50/20 modunu tamamlamak.',
+        story: 'Tüm FNaF evrenini tek bir ofiste buluşturan, tamamen refleks, ezber ve hız üzerine kurulu nihai meydan okuma oyunudur.',
+        mechanics: ['50 Animatronik', 'Skor Mücadelesi', 'Yüksek Tempo'],
+        threats: [
+          { name: 'Nightmare Fredbear & Nightmare', counter: 'Sol veya sağ kapıda kırmızı gözleri belirdiğinde ilgili kapıyı anında kapat.' },
+          { name: 'Toy Freddy', counter: 'CAM 08’deki oyun ekranından Mr. Hugs’ın bulunduğu kapıyı kapatarak oyundan düşmesini önle.' },
+          { name: 'The Puppet & Chica', counter: 'Global Music Box’ı aralıklarla açıp kapatarak hem müzik kutusunu hem mutfağı kontrol et.' },
+          { name: 'Dee Dee / XOR', counter: 'Rastgele ekstra karakter ekler; 50/20 modunda gelen yeni tehdide göre Death Coin kullan.' },
+          { name: 'Old Man Consequences', counter: 'Ekranda belirdiğinde balık gölgesi tam ortadayken C tuşuna basıp ekran kilitlenmesini önle.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: '2,000 Puan', done: false },
+          { id: 's2', label: '5,000 Puan', done: false },
+          { id: 's3', label: '8,000 Puan', done: false },
+          { id: 's4', label: '10,000 Puan (50/20 Mode)', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-hw',
+        catalogCode: 'FNAF-HW1',
+        title: "Five Nights at Freddy's: Help Wanted",
+        category: 'official',
+        year: '2019',
+        developer: 'Steel Wool Studios',
+        steamAppId: '732690',
+        steamOwned: false,
+        accent: '#a78bfa',
+        emblem: 'visor',
+        objective: 'Klasik FNaF bölümlerini, animatronik tamir görevlerini ve karanlık oda mini oyunlarını tamamlayarak gizli kasetleri toplamak ve Glitchtrap’in sırrını çözmek.',
+        story: 'Hem VR hem de standart ekranda oynanabilen, serinin ikonik sahnelerini 3 boyutlu ve etkileşimli hâle getiren koleksiyon oyunudur.',
+        mechanics: ['Mini Oyun Koleksiyonu', 'Animatronik Tamiri', 'Kaset Avı'],
+        threats: [
+          { name: 'Glitchtrap', counter: 'Kasetleri topladıkça lobi arkasında belirir; son kasetle birleşmeye çalışırken kaset oynatıcıdaki düğmeye bas.' },
+          { name: 'PlushBabies', counter: 'Dark Rooms bölümünde el feneri pilini idareli kullanıp saklanan bebekleri tek tek yakala.' },
+          { name: 'Nightmarionne', counter: 'Night Terrors bölümünde kapıları ve dolabı kontrol ederken dokunaçları fenerle uzaklaştır.' },
+          { name: 'Ennard Vent Repair', counter: 'Buhar vanalarını ve dişlileri sırayla tamir ederken havalandırmadan gelen Ennard’a kapak kapat.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Ana Bölümler', done: false },
+          { id: 's2', label: 'Pizza Party Ending', done: false },
+          { id: 's3', label: 'Tüm Kaset & Paralar', done: false },
+          { id: 's4', label: 'Curse of Dreadbear DLC', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-sb',
+        catalogCode: 'FNAF-SB',
+        title: "Five Nights at Freddy's: Security Breach",
+        category: 'official',
+        year: '2021',
+        developer: 'Steel Wool Studios',
+        steamAppId: '747660',
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'star',
+        objective: 'Devasa Mega Pizzaplex alışveriş merkezinde mahsur kalan Gregory olarak Glamrock Freddy’nin yardımıyla diğer animatroniklerden gizlenmek ve sabah 6’ya kadar çıkış bulmak.',
+        story: 'Seriyi ilk kez serbest dolaşım yapısına taşıyan oyunda güvenlik görevlisi Vanessa ve Vanny’den kaçarak tesisi keşfedersin.',
+        mechanics: ['Serbest Dolaşım', 'Gizlilik & Kaçış', 'Çoklu Son'],
+        threats: [
+          { name: 'Glamrock Chica', counter: 'Seslere duyarlıdır; Faz-Cam veya Fazerblaster ile sersemletip gizlenerek yanından geç.' },
+          { name: 'Montgomery Gator', counter: 'Güneş gözlüğü nedeniyle Faz-Cam’den etkilenmez; saklanma noktalarını kullan ve Fazblaster ile göğsüne nişan al.' },
+          { name: 'Roxanne Wolf', counter: 'Duvar arkasını görebilir; koşmak yerine çömelerek sessiz ilerle ve Chica’nın ses kutusuyla dikkatini dağıt.' },
+          { name: 'Daycare Attendant (Moon)', counter: 'Saat başı ışıklar söndüğünde güvenlik istasyonuna ulaş veya Glamrock Freddy’nin içine gir.' },
+          { name: 'Vanny & Burntrap', counter: 'Vanny yaklaşınca ekran bozulur, hemen saklan; Burntrap savaşında havalandırma kapaklarını yak.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: '00:00–06:00 Ana Hikâye', done: false },
+          { id: 's2', label: 'Burntrap Ending', done: false },
+          { id: 's3', label: 'Princess Quest (True Ending)', done: false },
+          { id: 's4', label: 'Tüm Koleksiyon & Geliştirmeler', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-ruin',
+        catalogCode: 'SB-RUIN',
+        title: 'Security Breach: RUIN',
+        category: 'official',
+        year: '2023',
+        developer: 'Steel Wool Studios',
+        steamAppId: '1924720',
+        steamOwned: false,
+        accent: '#a78bfa',
+        emblem: 'shard',
+        objective: 'Yıkılmış Mega Pizzaplex’e arkadaşı Gregory’yi kurtarmak için giren Cassie olarak V.A.N.N.I. maskesiyle sanal ve gerçek dünya arasında geçiş yapıp güvenlik düğümlerini kapatmak.',
+        story: 'Security Breach olaylarının ardından harabeye dönen tesiste daha karanlık ve gerilim odaklı bir kurtarma hikâyesi sunar.',
+        mechanics: ['V.A.N.N.I. AR Maskesi', 'Bulmaca & Keşif', 'Hikâye DLC'],
+        threats: [
+          { name: 'The Mimic', counter: 'Final kovalamacasında Faz-Wrench ile kapıları aç ve telsiz yönlendirmelerini takip ederek durmadan koş.' },
+          { name: 'M.X.E.S. Entity', counter: 'Maskeyi uzun süre takılı tutarsan belirip animatronikleri çağırır; tehlike artınca maskeyi çıkar.' },
+          { name: 'Ruined Monty & Roxy', counter: 'Kamera hoparlörleriyle dikkatlerini başka yöne çek; kör olan Roxy’nin yanından ses çıkarmadan geç.' },
+          { name: 'Mini Music Men', counter: 'Dar tünellerde maskeyi çıkarıp gerçek dünyadaki engelleri aşarak arkana bakmadan ilerle.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Chapter 1–5', done: false },
+          { id: 's2', label: 'Elevator Ending', done: false },
+          { id: 's3', label: 'Brazil Ending', done: false },
+          { id: 's4', label: 'Scooper Ending', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-hw2',
+        catalogCode: 'FNAF-HW2',
+        title: "Five Nights at Freddy's: Help Wanted 2",
+        category: 'official',
+        year: '2023',
+        developer: 'Steel Wool Studios',
+        steamAppId: '2287520',
+        steamOwned: false,
+        accent: '#66c0f4',
+        emblem: 'dual',
+        objective: 'Fazbear Entertainment çalışanı olarak Pizzaplex sahne arkası, Sister Location ve Fizzy Faz gibi 6 farklı kategorideki mini oyunları tamamlayıp Princess Quest IV sonuna ulaşmak.',
+        story: 'Help Wanted’ın devamı olan bu yapımda hızlı tempolu beceri görevleriyle RUIN öncesindeki olaylara ışık tutarsın.',
+        mechanics: ['Beceri Mini Oyunları', 'Sister Location VR', 'Gizli Son'],
+        threats: [
+          { name: 'Fazerblast & Carousel Düşmanları', counter: 'Hedefleri vururken arkadan yaklaşan robotlara karşı çevreni sürekli kontrol et.' },
+          { name: 'Ballora Gallery VR', counter: 'Müziğin ritmi ve yönünü dinleyerek sadece sessiz anlarda ileri hareket et.' },
+          { name: 'Scrap Baby & Mimic', counter: 'Tamir ve ofis bölümlerinde yönergeleri hatasız uygulayıp el feneriyle yaklaşmaları durdur.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Tüm Mini Oyun Kategorileri', done: false },
+          { id: 's2', label: 'Faz-Force Ending', done: false },
+          { id: 's3', label: 'Princess Quest IV Ending', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-itp',
+        catalogCode: 'FNAF-ITP',
+        title: "Five Nights at Freddy's: Into the Pit",
+        category: 'official',
+        year: '2024',
+        developer: 'Mega Cat Studios',
+        steamAppId: '2638370',
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'pit',
+        objective: 'Eski bir pizzacıdaki top havuzu aracılığıyla 1985 yılına gidip gelen Oswald olarak farklı zaman dilimlerinde ipuçları toplamak, babasını kurtarmak ve 3 yıldızlı gerçek sona ulaşmak.',
+        story: 'Fazbear Frights kitap serisinin ilk hikâyesinden uyarlanan, piksel sanat tarzında 2D macera ve hayatta kalma oyunudur.',
+        mechanics: ['2D Macera & Gizlilik', 'Zaman Yolculuğu', 'Bulmaca'],
+        threats: [
+          { name: 'Pit Spring Bonnie', counter: 'Ayak seslerini duyduğunda dolap veya masa altına gir ve nefes tutma mini oyununda ritmi tuttur.' },
+          { name: 'Ses Göstergesi & Saklanma Noktaları', counter: 'Koşmak yerine yürüyerek gürültü halkasını küçük tut; aynı saklanma yerini üst üste kullanma.' },
+          { name: 'Zaman Yolculuğu Bulmacaları', counter: '1985 ve günümüz arasında eşya taşıyarak gizli çocukları kurtar ve 3 yıldızlı sonu aç.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: '1-Star & 2-Star Ending', done: false },
+          { id: 's3', label: '3-Star True Ending', done: false }
+        ]
+      },
+      {
+        id: 'fnaf-sotm',
+        catalogCode: 'FNAF-SOTM',
+        title: "Five Nights at Freddy's: Secret of the Mimic",
+        category: 'official',
+        year: '2025',
+        developer: 'Steel Wool Studios',
+        steamAppId: '2966820',
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'mimic',
+        objective: '1970’lerin sonundaki Murray’s Costume Manor atölyesinde her kostüme girebilen prototip endoskeleton Mimic’ten kaçarak Fazbear Entertainment’ın aradığı gizli teknolojiyi ele geçirmek.',
+        story: 'Serinin zaman çizelgesinde en erken dönemlerden birine giderek Mimic karakterinin kökenini ve eski kostüm atölyesini keşfedersin.',
+        mechanics: ['Birinci Şahıs Korku', 'Takipçi Yapay Zekâ', 'Keşif'],
+        threats: [
+          { name: 'The Mimic Kostüm Değişimleri', counter: 'Atölyedeki boş kostümlerin içine gizlenebilir; hareket eden veya nefes alan kostümlere yaklaşma.' },
+          { name: 'Jackie', counter: 'Müzik kutusu mekanizması aktifleştiğinde engellerin arasından hızla uzaklaşıp görüş hattını kır.' },
+          { name: 'Murray’s Costume Manor Tuzakları', counter: 'Karanlık koridorlarda mekanik kapı kilitlerini ve ses tuzaklarını kullanarak takipçiyi atlat.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Ana Hikâye', done: false },
+          { id: 's2', label: 'Gizli Sonlar', done: false },
+          { id: 's3', label: '%100 Tamamlama', done: false }
+        ]
+      },
+
+      // ==================== 12 POPÜLER FAN OYUNU ====================
+      {
+        id: 'fan-fnac1',
+        catalogCode: 'FNAC-01',
+        title: "Five Nights at Candy's",
+        category: 'fangame',
+        year: '2015',
+        developer: 'Emil Macko',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#66c0f4',
+        emblem: 'cat',
+        objective: 'Candy’s Burgers & Fries restoranında gece görüşlü kameralardan Candy, Cindy ve Chester’ı izleyip üç farklı ofis kapısını kontrol ederek sabah 6’ya kadar hayatta kalmak.',
+        story: 'FNaF topluluğunun en köklü ve resmi Fazbear Fanverse girişimine seçilen klasik fangame serisinin ilk oyunudur.',
+        mechanics: ['Gece Görüşü Kamera', '3 Kapı Kontrolü', 'Enerji Yönetimi'],
+        threats: [
+          { name: 'Candy & Cindy', counter: 'Karanlıkta parlayan gözlerini kameradan takip et; sol veya sağ kapı camında belirdiklerinde kapıyı kapat.' },
+          { name: 'Chester', counter: 'Perde arkasından çıktığında sol koridordan gelir; kapı ışığına gerek kalmadan gözlerinden fark edip kapıyı indir.' },
+          { name: 'The Penguin', counter: 'Ofise girerse kapı kontrollerini bozar; orta camdan yaklaştığını görünce orta kapıyı kapat.' },
+          { name: 'Blank', counter: 'CAM 11’deki çizim odasından çıkıp orta pencereyi kırmaya çalışır; hareket ettiğinde orta kepengi indir.' },
+          { name: 'Old Candy', counter: 'Gözleri parlamaz; sadece gece görüşü kamerasıyla yerini tespit edip sol kapıyı kapat.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Night 6', done: false },
+          { id: 's3', label: '7/20 Mode', done: false }
+        ]
+      },
+      {
+        id: 'fan-fnac2',
+        catalogCode: 'FNAC-02',
+        title: "Five Nights at Candy's 2",
+        category: 'fangame',
+        year: '2016',
+        developer: 'Emil Macko',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#66c0f4',
+        emblem: 'phone',
+        objective: 'Kapanmış robot fabrikasında kameralardaki telefonları çaldırarak hasarlı animatronikleri ofisten uzaklaştırmak ve telefon hatlarının bozulmasını önlemek.',
+        story: 'Kapıların bulunmadığı terk edilmiş bir fabrikada, sesli yönlendirme ve kamera takibine dayalı gerilimli bir devam oyunudur.',
+        mechanics: ['Telefon Sesi Çekme', 'Kamera Takibi', 'Fabrika Ortamı'],
+        threats: [
+          { name: 'New Candy & Cindy', counter: 'Yaklaştıkları odaya komşu kameradaki telefonu çaldırarak dikkatlerini geri çek.' },
+          { name: 'Chester', counter: 'Havalandırma ve koridor geçişlerinde telefon sesine duyarlıdır; ofis önündeki odalara sokma.' },
+          { name: 'Withered Blank', counter: 'Kırık gövdesiyle hızlı ilerler; koridora girdiğinde en uzak odadaki telefonu çaldır.' },
+          { name: 'RAT & CAT', counter: 'İleri gecelerde aktifleşirler; telefon hatlarını bozmalarına izin vermeden sürekli izle.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Night 6', done: false },
+          { id: 's3', label: '8/20 Mode', done: false }
+        ]
+      },
+      {
+        id: 'fan-fnac3',
+        catalogCode: 'FNAC-03',
+        title: "Five Nights at Candy's 3",
+        category: 'fangame',
+        year: '2017',
+        developer: 'Emil Macko',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#a78bfa',
+        emblem: 'beam',
+        objective: 'Mary Schmidt’in çocukluk kâbuslarında yatak altını ve dolabı el feneriyle kontrol ederek Monster Rat ve Monster Cat’i uzak tutmak; gündüz mini oyunlarıyla sırrı çözmek.',
+        story: 'FNaF 4 atmosferini derin bir psikolojik hikâye ve gündüz/gece döngüsüyle birleştiren üçlemenin final oyunudur.',
+        mechanics: ['El Feneri Savunması', 'Gündüz Mini Oyunları', 'Hikâye Odaklı'],
+        threats: [
+          { name: 'Monster Rat', counter: 'Odaya girdiğinde el fenerini yüzüne tutarak geri çekilmesini sağla; yatak altına girerse eğilip fener yak.' },
+          { name: 'Monster Cat', counter: 'Dolap ve yatak kenarından sessizce yaklaşır; ses ipuçlarını dinleyip fenerle uzaklaştır.' },
+          { name: 'Monster Vinnie', counter: 'Final gecesinde kaset çaları kullanarak zihnini sakinleştir ve saldırı yönüne fener tut.' },
+          { name: 'Shadow Rat', counter: 'Deep Sleep modunda çok daha hızlı hareket eder; fener açısını anlık değiştirerek takip et.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Forgotten Ending', done: false },
+          { id: 's3', label: 'Deep Sleep / Shadow Rat', done: false }
+        ]
+      },
+      {
+        id: 'fan-tjoc',
+        catalogCode: 'TJOC-SM',
+        title: 'The Joy of Creation: Story Mode',
+        category: 'fangame',
+        year: '2017',
+        developer: 'Nikson',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'window',
+        objective: 'Scott Cawthon’ın evindeki 5 farklı odada (Bedroom, Living Room, Office, Basement, Attic) tamamen farklı kurallara sahip Ignited animatroniklere karşı hayatta kalmak.',
+        story: 'Unreal Engine ile geliştirilen, her bölümde mekanikleri tamamen değişen en ünlü ve yüksek gerilimli FNaF hayran oyunudur.',
+        mechanics: ['5 Farklı Mekanik', 'Unreal Engine', 'Yüksek Gerilim'],
+        threats: [
+          { name: 'Ignited Freddy', counter: 'Pencere veya kapı önünde belirdiğinde fenerle kör et ya da perdeleri zamanında kapat.' },
+          { name: 'Ignited Bonnie', counter: 'Kamera veya pencere kontrolünde bakışını kaçır; ofiste monitöre baktığında saldırır.' },
+          { name: 'Ignited Chica', counter: 'Etrafındaki nesneleri ve kapıları kontrol ederek odaya sızmasını engelle.' },
+          { name: 'Ignited Foxy', counter: 'Bodrum ve çatı katında görüş hattından kaçın; sadece arkasını döndüğünde hareket et.' },
+          { name: 'Creation', counter: 'Attic bölümünde tüm kameraları ve yangın söndürücü mekaniklerini senkronize yönet.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Bedroom', done: false },
+          { id: 's2', label: 'Living Room', done: false },
+          { id: 's3', label: 'Office', done: false },
+          { id: 's4', label: 'Basement', done: false },
+          { id: 's5', label: 'Attic (Final)', done: false }
+        ]
+      },
+      {
+        id: 'fan-popgoes',
+        catalogCode: 'POP-ARC',
+        title: 'POPGOES Arcade',
+        category: 'fangame',
+        year: '2022',
+        developer: 'Kane Carter',
+        steamAppId: '1986840',
+        steamOwned: false,
+        accent: '#3ba56b',
+        emblem: 'hex',
+        objective: 'Bozuk bir atari makinesinin içindeki ormanda dolaşıp düşmanları yenmek, yeteneklerini geliştirmek ve makineyi ele geçiren karanlık virüsü temizlemek.',
+        story: 'Fazbear Fanverse kapsamında Steam’de yayınlanan, klasik el konsolu estetiğine sahip RPG macera oyunudur.',
+        mechanics: ['Retro RPG', 'Keşif & Savaş', 'Bestiary Koleksiyonu'],
+        threats: [
+          { name: 'Corrupted Animatronics', counter: 'Savaşlarda doğru element ve yetenek zamanlamasıyla zayıf noktalarına saldır.' },
+          { name: 'Blackrabbit', counter: 'Haritadaki karanlık geçitlerde tuzaklardan kaçın ve savunma güçlendirmelerini kuşan.' },
+          { name: 'Machinist & Boss Savaşları', counter: 'İksir ve parça geliştirmelerini tamamlayıp saldırı desenlerini ezberleyerek karşı saldırı yap.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'The Dead Forest', done: false },
+          { id: 's2', label: 'The Machinist', done: false },
+          { id: 's3', label: '%100 Bestiary', done: false }
+        ]
+      },
+      {
+        id: 'fan-onaf1',
+        catalogCode: 'ONAF-01',
+        title: "One Night at Flumpty's",
+        category: 'fangame',
+        year: '2015',
+        developer: 'Jonochrome',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'egg',
+        objective: 'Zaman ve mekân kurallarını bükebilen dev yumurta Flumpty Bumpty ve tuhaf arkadaşlarının kaçırma oyununda tek bir gece boyunca sabah 6’ya kadar hayatta kalmak.',
+        story: 'El çizimi karikatürize görselleriyle hem mizahi hem de keskin refleks mekanikleri sunan efsanevi serinin ilk oyunudur.',
+        mechanics: ['Tek Gece Mücadelesi', 'Hard Boiled Modu', 'Enerji Kontrolü'],
+        threats: [
+          { name: 'Flumpty Bumpty', counter: 'Koridor kapılarından herhangi birinden yaklaşabilir; kapı ışığında göründüğünde kapıyı kapat.' },
+          { name: 'Birthday Boy Blam', counter: 'Sol koridordan ilerler; kapıya ulaştığında ışığı yakıp sol kapıyı indir.' },
+          { name: 'Grunkfuss the Clown', counter: 'Duvar deliğinden yavaşça dışarı çıkar; sabır sayacı dolmadan monitörü açıp kapat.' },
+          { name: 'The Beaver', counter: 'Tuvalet kağıdı bittiğinde koridordan hızla koşar; sağ kapıyı zamanında kapat.' },
+          { name: 'Redman', counter: 'Bilgisayar ekranında virüs uyarısı çıkardığında yükleme çubuğu dolmadan pencereyi kapat.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Normal Night (00:00–06:00)', done: false },
+          { id: 's2', label: 'Hard Boiled Mode', done: false }
+        ]
+      },
+      {
+        id: 'fan-onaf2',
+        catalogCode: 'ONAF-02',
+        title: "One Night at Flumpty's 2",
+        category: 'fangame',
+        year: '2015',
+        developer: 'Jonochrome',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'eye',
+        objective: 'Kapıların olmadığı ofiste ışıkları söndürerek Exposure (görünürlük) metresini sıfırda tutmak ve havalandırma kapağını kontrol ederek sabah 6’ya ulaşmak.',
+        story: 'İlk oyunun formülünü ışık kapatma, görünürlük barı ve havalandırma savunmasıyla çok daha tempolu bir hâle getirir.',
+        mechanics: ['Işık & Exposure Barı', 'Havalandırma Kapağı', 'Hızlı Refleks'],
+        threats: [
+          { name: 'Eyesaur', counter: 'Koridordan yaklaşırken ofis ışığını hemen kapat ve Exposure barının yükselmesini engelle.' },
+          { name: 'The Owl', counter: 'Sağ veya sol havalandırmadan uçar; hangi taraftaysa o havalandırma kapağını kapat.' },
+          { name: 'Golden Flumpty', counter: 'Ofiste aniden belirdiğinde monitörü açıp kapatarak yok et.' },
+          { name: 'Flumpty & Blam', counter: 'Ofis girişinde belirdiklerinde ışığı kapatıp tamamen uzaklaşana kadar karanlıkta bekle.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Normal Night (00:00–06:00)', done: false },
+          { id: 's2', label: 'Hard Boiled Mode', done: false }
+        ]
+      },
+      {
+        id: 'fan-onaf3',
+        catalogCode: 'ONAF-03',
+        title: "One Night at Flumpty's 3",
+        category: 'fangame',
+        year: '2021',
+        developer: 'Jonochrome',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'flame',
+        objective: 'Donmuş bir tesiste şömine ateşini yakarak donmayı önlemek, kameralardaki flaşla düşmanları dondurmak ve finaldeki Flumpty Night modunu tamamlamak.',
+        story: 'Fazbear Fanverse kapsamında yayınlanan üçlemenin final oyunudur; şömine ısısı ve kamera flaşı üzerine kuruludur.',
+        mechanics: ['Şömine Isı Kontrolü', 'Kamera Flaşı', 'Flumpty Night'],
+        threats: [
+          { name: 'Flumpty & Flumpty Gece Modu', counter: 'Final modunda tüm düşmanlar Flumpty klonlarına dönüşür; her odadaki klon mekaniğini flaş ve şömineyle durdur.' },
+          { name: 'Shadow Flumpty', counter: 'Karanlıkta belirdiğinde kamera flaşını patlatarak görüş alanından uzaklaştır.' },
+          { name: 'Beavowl', counter: 'Tavandan ve havalandırmadan saldırır; şömineyi söndürüp ısısını düşürerek tuzağı boz.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Normal Night', done: false },
+          { id: 's2', label: 'Flumpty Night (Final)', done: false }
+        ]
+      },
+      {
+        id: 'fan-dsaf',
+        catalogCode: 'DSAF-01',
+        title: "Dayshift at Freddy's",
+        category: 'fangame',
+        year: '2016',
+        developer: 'DirectDogman',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'badge',
+        objective: 'Gündüz vardiyası çalışanı Jack Kennedy olarak yapacağın seçimlerle pizzacıyı kurtarmak ya da Dave Miller ile iş birliği yapıp tüm hikâye sonlarını açmak.',
+        story: 'FNaF evrenini kara mizah, absürt diyaloglar ve onlarca farklı son içeren seçim tabanlı bir RPG deneyimine dönüştürür.',
+        mechanics: ['Seçim Odaklı Hikâye', 'Kara Mizah', 'Çoklu Son'],
+        threats: [
+          { name: 'Dave Miller Kararları', counter: 'Tekliflerini kabul etmek veya reddetmek hikâye rotasını ve ulaşacağın sonu tamamen değiştirir.' },
+          { name: 'Phone Guy Denetimleri', counter: 'Gündüz vardiyası görevlerini ve mini oyunları eksiksiz tamamlayarak kovulmayı önle.' },
+          { name: 'Fazbender Vardiya Tuzakları', counter: 'Animatronik bakım ve sahne şovlarında riskli seçeneklerden kaçınarak güvenli rotayı izle.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Ana Vardiya Sonu', done: false },
+          { id: 's2', label: 'Dave Miller Rotası', done: false },
+          { id: 's3', label: 'Gizli & Alternatif Sonlar', done: false }
+        ]
+      },
+      {
+        id: 'fan-jrs',
+        catalogCode: 'JRS-22',
+        title: "JR's",
+        category: 'fangame',
+        year: '2022',
+        developer: 'Ramenov & Ekip',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#a78bfa',
+        emblem: 'ghost',
+        objective: 'Dedektif olarak kameralardaki ipuçlarını ve animatroniklerin anormal davranışlarını analiz edip her gece aralarına sızan hayalet (Haunted) animatroniği tespit etmek.',
+        story: 'Klasik hayatta kalma gerilimini dedektiflik ve gözlem bulmacasıyla birleştiren, görsel kalitesiyle öne çıkan modern bir fan oyunudur.',
+        mechanics: ['Dedektiflik & Analiz', 'Hayalet Tespiti', 'Atmosferik Korku'],
+        threats: [
+          { name: 'Haunted Animatronic Tespiti', counter: 'Kameralardaki doğaüstü belirtileri (ışık titremesi, anormal poz) inceleyip gerçek hayaleti işaretle.' },
+          { name: 'Ghost Mangle', counter: 'Final gecesinde odalar arası hareketini ses ve kamera bozulmalarından takip et.' },
+          { name: 'Paulbear', counter: 'Ofis girişine yaklaştığında uyarı işaretlerini takip edip kapı ve ışık protokolünü uygula.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Night 6 (True Ending)', done: false }
+        ]
+      },
+      {
+        id: 'fan-tnar',
+        catalogCode: 'TNAR-16',
+        title: "Those Nights at Rachel's",
+        category: 'fangame',
+        year: '2016',
+        developer: 'Nikson',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#e59a3c',
+        emblem: 'closet',
+        objective: 'Doug’s & Rachel’s restoranında ofis içinde serbestçe hareket ederek kapıları tutmak, dolaba saklanmak ve kameraları kontrol edip 6 geceyi tamamlamak.',
+        story: 'Klasik FNaF atmosferini ofis içi hareket özgürlüğü ve kaliteli 3D modellerle birleştiren sevilen bir fan yapımıdır.',
+        mechanics: ['Ofis İçi Hareket', 'Saklanma & Kapı Tutma', 'Kamera Takibi'],
+        threats: [
+          { name: 'Rachel', counter: 'Sol koridordan yaklaşır; kapıya koşup ayak sesleri uzaklaşana kadar kapıyı kapalı tut.' },
+          { name: 'Doug', counter: 'Sağ koridordan ilerler; sağ kapıya gidip kapıyı tutarak ofise girmesini engelle.' },
+          { name: 'Pete & Bane', counter: 'Ofis içine sızdıklarında arkandaki dolaba girip nefeslerini tutarak geçmelerini bekle.' },
+          { name: 'The Thing', counter: 'Kamera sistemini ve ofis köşelerini kontrol ederek görüş alanına girdiğinde monitörü kapat.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: 'Night 1–5', done: false },
+          { id: 's2', label: 'Night 6', done: false },
+          { id: 's3', label: 'Custom Night', done: false }
+        ]
+      },
+      {
+        id: 'fan-fn4',
+        catalogCode: 'FN4-FE',
+        title: 'Final Nights 4: Fates Entwined',
+        category: 'fangame',
+        year: '2018',
+        developer: 'JeliLiam',
+        steamAppId: null,
+        steamOwned: false,
+        accent: '#c93b3b',
+        emblem: 'clock',
+        objective: 'Hem 1973’teki eski Fredbear’s Family Diner’da hem de 2017’deki paranormal araştırmalarda farklı bölümleri tamamlayarak serinin lanetini çözmek.',
+        story: 'Sinematik ara sahneleri, zaman atlamalı hikâye anlatımı ve yüksek zorluk seviyesiyle bilinen Final Nights serisinin finalidir.',
+        mechanics: ['Çift Zaman Dilimi', 'Sinematik Hikâye', 'Paranormal Araştırma'],
+        threats: [
+          { name: 'Reaper Animatronics', counter: 'El feneri ve ortam seslerini kullanarak karanlık köşelerden yaklaşan Reaper modellerini durdur.' },
+          { name: 'Burned Spring Bonnie', counter: '1973 ve 2017 bölümlerinde ses yönlendirmelerini ve kapı kilitlerini zamanında kullan.' },
+          { name: '1973 & 2017 Zaman Çizgisi', counter: 'Her zaman diliminin kendine özgü mekanik ve bulmaca kurallarına göre savunma stratejini değiştir.' }
+        ],
+        status: 'planned',
+        manualProgress: null,
+        rating: 0,
+        hours: 0,
+        jumpscares: 0,
+        completedDate: '',
+        customCover: '',
+        notes: '',
+        steps: [
+          { id: 's1', label: '1973 & 2017 Bölümleri', done: false },
+          { id: 's2', label: 'Tüm Hikâye Sonları', done: false }
+        ]
+      }
+    ];
+
+    // Uygulama Durumu (State)
+    let games = [];
+    let currentView = 'library';
+    let filterCategory = 'all';
+    let filterStatus = 'all';
+    let filterPlatform = 'all';
+    let searchQuery = '';
+    let sortBy = 'default';
+    let activeGameId = null;
+    let pendingSteamMatches = [];
+    let toastTimer = null;
+
+    function setLoading(active, message = 'YÜKLENİYOR...') {
+      const el = document.getElementById('ft-loading');
+      if (!el) return;
+      document.getElementById('ft-loading-text').textContent = message;
+      el.classList.toggle('active', !!active);
+    }
+
+    const STATUS_LABELS = {
+      planned: {
+        text: 'SIRADA',
+        cls: 'bg-[#1a1d24] text-[#9ca0ab] border-white/15'
+      },
+      playing: {
+        text: 'OYNANIYOR',
+        cls: 'bg-[#e59a3c]/15 text-[#e59a3c] border-[#e59a3c]/40'
+      },
+      completed: {
+        text: 'BİTİRİLDİ',
+        cls: 'bg-[#3ba56b]/15 text-[#3ba56b] border-[#3ba56b]/40'
+      },
+      dropped: {
+        text: 'BIRAKILDI',
+        cls: 'bg-[#c93b3b]/15 text-[#c93b3b] border-[#c93b3b]/40'
+      }
+    };
+
+    /**
+     * LocalStorage Yükleme & Eski Sürümlerden (v1 / fazbearTrackerData) Otomatik Geçiş
+     */
+    function loadState() {
+      try {
+        const rawV2 = localStorage.getItem(STORAGE_KEY_V2);
+        if (rawV2) {
+          const parsed = JSON.parse(rawV2);
+          if (parsed && Array.isArray(parsed.games) && parsed.games.length > 0) {
+            const defaultMap = new Map(DEFAULT_GAMES.map(d => [d.id, d]));
+            games = parsed.games.map(item => normalizeGameObject(item, defaultMap.get(item.id)));
+            return;
+          }
+        }
+
+        // Eski sürümlerden veri göçü (Migration)
+        for (const oldKey of LEGACY_KEYS) {
+          const rawOld = localStorage.getItem(oldKey);
+          if (rawOld) {
+            const parsedOld = JSON.parse(rawOld);
+            const oldList = Array.isArray(parsedOld) ? parsedOld : (parsedOld && Array.isArray(parsedOld.games) ? parsedOld.games : null);
+            if (oldList && oldList.length > 0) {
+              const defaultMap = new Map(DEFAULT_GAMES.map(d => [d.id, d]));
+              games = oldList.map(item => {
+                const def = defaultMap.get(item.id);
+                const migratedSteps = Array.isArray(item.milestones)
+                  ? item.milestones.map(m => ({ id: m.id, label: m.label, done: !!m.done }))
+                  : (Array.isArray(item.steps) ? item.steps : (def ? def.steps : []));
+                const mappedStatus = item.status === 'hundred' ? 'completed' : (item.status || 'planned');
+                return normalizeGameObject({
+                  ...item,
+                  status: mappedStatus,
+                  jumpscares: item.jumpscares ?? item.deaths ?? 0,
+                  steps: migratedSteps
+                }, def);
+              });
+              saveState(false);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Veri yükleme hatası:', e);
+      }
+
+      games = JSON.parse(JSON.stringify(DEFAULT_GAMES));
+      saveState(false);
+    }
+
+    function normalizeGameObject(item, def) {
+      return {
+        id: item.id,
+        catalogCode: item.catalogCode || (def ? def.catalogCode : 'CUST-01'),
+        title: item.title,
+        category: item.category || (def ? def.category : 'fangame'),
+        year: item.year || (def ? def.year : '2026'),
+        developer: item.developer || (def ? def.developer : 'Bağımsız Yapımcı'),
+        steamAppId: item.steamAppId !== undefined ? item.steamAppId : (def ? def.steamAppId : null),
+        steamOwned: !!item.steamOwned,
+        accent: item.accent || (def ? def.accent : '#e59a3c'),
+        emblem: item.emblem || (def ? def.emblem : 'bear'),
+        objective: item.objective || (def ? def.objective : 'Bu oyundaki tüm geceleri ve gizli sonları tamamlayarak hayatta kalmak.'),
+        story: item.story || (def ? def.story : 'Arşive eklenmiş özel FNaF / fan yapımı oyun kaydı.'),
+        mechanics: Array.isArray(item.mechanics) && item.mechanics.length > 0
+          ? item.mechanics
+          : (def ? def.mechanics : ['Hayatta Kalma', 'Gece Vardiyası']),
+        threats: Array.isArray(item.threats) && item.threats.length > 0
+          ? item.threats
+          : (def ? JSON.parse(JSON.stringify(def.threats)) : []),
+        status: item.status === 'hundred' ? 'completed' : (item.status || 'planned'),
+        manualProgress: typeof item.manualProgress === 'number' ? item.manualProgress : null,
+        rating: Number(item.rating) || 0,
+        hours: Number(item.hours) || 0,
+        jumpscares: Number(item.jumpscares ?? item.deaths) || 0,
+        completedDate: item.completedDate || '',
+        customCover: item.customCover || '',
+        notes: item.notes || '',
+        steps: Array.isArray(item.steps)
+          ? item.steps
+          : (def ? JSON.parse(JSON.stringify(def.steps)) : [])
+      };
+    }
+
+    function saveState(notify = true, message = 'Kaydedildi', isError = false) {
+      try {
+        const payload = { version: 2, updatedAt: new Date().toISOString(), games };
+        localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(payload));
+        if (notify) showToast(message, isError);
+      } catch (err) {
+        showToast('Depolama alanı dolu! Kapak görselini küçültün.', true);
+      }
+    }
+
+    function showToast(text, isError = false) {
+      const el = document.getElementById('toast');
+      const txt = document.getElementById('toast-text');
+      const ind = document.getElementById('toast-indicator');
+      txt.textContent = text;
+      ind.className = `w-2 h-2 ${isError ? 'bg-[#c93b3b]' : 'bg-[#3ba56b]'}`;
+      el.classList.remove('opacity-0', 'translate-y-2');
+      el.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.add('opacity-0', 'translate-y-2');
+        el.classList.remove('opacity-100', 'translate-y-0');
+      }, 2200);
+    }
+
+    /**
+     * İlerleme Yüzdesi Hesaplama
+     */
+    function getGameProgress(game) {
+      if (typeof game.manualProgress === 'number' && !Number.isNaN(game.manualProgress)) {
+        return Math.max(0, Math.min(100, Math.round(game.manualProgress)));
+      }
+      if (!game.steps || game.steps.length === 0) {
+        return game.status === 'completed' ? 100 : 0;
+      }
+      const done = game.steps.filter(s => s.done).length;
+      return Math.round((done / game.steps.length) * 100);
+    }
+
+    /**
+     * 2:3 Minimalist Tipografik & Geometrik SVG Poster Kapak Üreticisi (Feature #6)
+     */
+    function buildPosterHTML(game, compact = false) {
+      const accent = game.accent || '#e59a3c';
+      const emblems = {
+        bear: `<circle cx="38" cy="40" r="9"/><circle cx="82" cy="40" r="9"/><rect x="34" y="42" width="52" height="44"/><rect x="48" y="22" width="24" height="14"/><circle cx="48" cy="58" r="3" fill="${accent}"/><circle cx="72" cy="58" r="3" fill="${accent}"/><line x1="46" y1="74" x2="74" y2="74"/>`,
+        mask: `<rect x="34" y="34" width="52" height="54"/><circle cx="48" cy="54" r="5" fill="${accent}"/><circle cx="72" cy="54" r="5" fill="${accent}"/><circle cx="42" cy="70" r="4" fill="#c93b3b"/><circle cx="78" cy="70" r="4" fill="#c93b3b"/>`,
+        spring: `<polygon points="44,44 38,20 50,22 52,44"/><polygon points="76,44 82,20 70,22 68,44"/><rect x="36" y="44" width="48" height="46"/><line x1="44" y1="76" x2="76" y2="76"/>`,
+        fangs: `<polygon points="60,28 32,86 88,86"/><polyline points="44,74 52,66 60,74 68,66 76,74"/>`,
+        orbit: `<circle cx="60" cy="60" r="24"/><ellipse cx="60" cy="60" rx="38" ry="11" transform="rotate(-20 60 60)"/>`,
+        circus: `<circle cx="60" cy="60" r="26"/><line x1="60" y1="34" x2="60" y2="86"/><line x1="34" y1="60" x2="86" y2="60"/>`,
+        triangle: `<polygon points="60,30 32,84 88,84"/><rect x="52" y="56" width="16" height="16" fill="${accent}"/>`,
+        grid50: `<rect x="32" y="36" width="56" height="48"/><text x="60" y="65" text-anchor="middle" fill="${accent}" font-family="JetBrains Mono" font-weight="700" font-size="14">50/20</text>`,
+        visor: `<rect x="30" y="46" width="60" height="28"/><circle cx="46" cy="60" r="6"/><circle cx="74" cy="60" r="6"/>`,
+        star: `<polygon points="60,28 68,48 90,50 73,64 78,86 60,74 42,86 47,64 30,50 52,48"/>`,
+        shard: `<polygon points="34,34 86,34 74,86 46,86"/><line x1="56" y1="34" x2="66" y2="60"/><line x1="66" y1="60" x2="54" y2="86"/>`,
+        dual: `<circle cx="48" cy="60" r="16"/><circle cx="72" cy="60" r="16"/>`,
+        pit: `<ellipse cx="60" cy="68" rx="32" ry="14"/><circle cx="48" cy="60" r="5" fill="${accent}"/><circle cx="62" cy="56" r="6"/><circle cx="74" cy="61" r="4"/>`,
+        mimic: `<rect x="38" y="34" width="44" height="52"/><circle cx="50" cy="52" r="5"/><circle cx="70" cy="52" r="5"/><rect x="46" y="70" width="28" height="8"/>`,
+        cat: `<polygon points="38,44 42,24 54,40"/><polygon points="82,44 78,24 66,40"/><rect x="36" y="42" width="48" height="44"/><line x1="26" y1="62" x2="40" y2="64"/><line x1="80" y1="64" x2="94" y2="62"/>`,
+        phone: `<rect x="42" y="34" width="36" height="52"/><circle cx="60" cy="52" r="8"/><rect x="52" y="70" width="16" height="6" fill="${accent}"/>`,
+        beam: `<polygon points="60,28 32,86 88,86" fill="${accent}" fill-opacity="0.12"/><circle cx="60" cy="64" r="12"/>`,
+        window: `<rect x="34" y="32" width="52" height="56"/><line x1="60" y1="32" x2="60" y2="88"/><line x1="34" y1="60" x2="86" y2="60"/>`,
+        hex: `<polygon points="60,30 86,45 86,75 60,90 34,75 34,45"/><circle cx="60" cy="60" r="10"/>`,
+        egg: `<ellipse cx="60" cy="60" rx="22" ry="30"/><circle cx="52" cy="54" r="3" fill="${accent}"/><circle cx="68" cy="54" r="3" fill="${accent}"/>`,
+        eye: `<ellipse cx="60" cy="60" rx="32" ry="18"/><circle cx="60" cy="60" r="10" fill="${accent}"/>`,
+        flame: `<polygon points="60,28 42,66 54,66 48,88 78,54 64,54"/>`,
+        badge: `<rect x="34" y="38" width="52" height="44"/><line x1="34" y1="52" x2="86" y2="52"/><rect x="42" y="60" width="14" height="14" fill="${accent}"/>`,
+        ghost: `<path d="M40 84 V52 A20 20 0 0 1 80 52 V84 L70 76 L60 84 L50 76 Z"/><circle cx="52" cy="54" r="3" fill="${accent}"/><circle cx="68" cy="54" r="3" fill="${accent}"/>`,
+        closet: `<rect x="36" y="30" width="48" height="60"/><line x1="60" y1="30" x2="60" y2="90"/><rect x="52" y="56" width="3" height="8"/><rect x="65" y="56" width="3" height="8"/>`,
+        clock: `<circle cx="60" cy="60" r="26"/><polyline points="60,42 60,60 74,66"/>`
+      };
+
+      const vectorShape = emblems[game.emblem] || emblems.bear;
+      const defaultSVG = `
+        <div class="w-full h-full bg-[#0e1015] flex flex-col justify-between p-2.5 select-none relative overflow-hidden">
+          <div class="crt-scanlines absolute inset-0 pointer-events-none z-10"></div>
+          <!-- Üst Katalog Satırı -->
+          <div class="relative z-20 flex items-center justify-between text-[9px] font-mono tracking-wider text-[#9ca0ab] border-b border-white/10 pb-1">
+            <span style="color:${accent}" class="font-bold">${game.catalogCode}</span>
+            <span>${game.year}</span>
+          </div>
+
+          <!-- Orta Geometrik Amblem -->
+          <div class="relative z-20 flex-1 flex items-center justify-center">
+            <svg viewBox="0 0 120 120" class="w-full h-full max-h-[115px]">
+              <g fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                ${vectorShape}
+              </g>
+            </svg>
+          </div>
+
+          <!-- Alt Tipografik Etiket -->
+          <div class="relative z-20 border-t border-white/10 pt-1.5">
+            <div class="text-[10px] font-extrabold uppercase leading-tight tracking-tight text-[#f2efe9] line-clamp-2">
+              ${game.title}
+            </div>
+            <div class="text-[8px] font-mono uppercase tracking-widest text-[#9ca0ab] mt-0.5 truncate">
+              ${game.category === 'official' ? 'OFFICIAL ARCHIVE' : 'FAN ARCHIVE'}
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (game.customCover) {
+        return `
+          <div class="w-full h-full relative bg-[#0b0c0f]">
+            <img src="${game.customCover}" alt="${game.title}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              class="w-full h-full object-cover block" />
+            <div style="display:none" class="w-full h-full">${defaultSVG}</div>
+            <div class="crt-scanlines absolute inset-0 pointer-events-none"></div>
+            <span class="absolute top-1.5 left-1.5 px-1 py-0.5 text-[9px] font-mono font-bold bg-[#0b0c0f]/90 text-[#f2efe9] border border-white/15">
+              ${game.catalogCode}
+            </span>
+          </div>
+        `;
+      }
+
+      return defaultSVG;
+    }
+
+    /**
+     * Üst Suite TV Özet İstatistiklerini Güncelle
+     */
+    function updateSummaryStats() {
+      const total = games.length;
+      const officialCount = games.filter(g => g.category === 'official').length;
+      const fanCount = games.filter(g => g.category === 'fangame').length;
+      const completedCount = games.filter(g => g.status === 'completed').length;
+      const playingCount = games.filter(g => g.status === 'playing').length;
+
+      const totalProgressSum = games.reduce((sum, g) => sum + getGameProgress(g), 0);
+      const avgProgress = total > 0 ? Math.round(totalProgressSum / total) : 0;
+
+      const totalHours = games.reduce((sum, g) => sum + (Number(g.hours) || 0), 0);
+      const ratedGames = games.filter(g => Number(g.rating) > 0);
+      const avgRating = ratedGames.length > 0
+        ? (ratedGames.reduce((sum, g) => sum + Number(g.rating), 0) / ratedGames.length).toFixed(1)
+        : '—';
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-completed').textContent = completedCount;
+      document.getElementById('stat-playing').textContent = playingCount;
+      document.getElementById('stat-progress').textContent = `%${avgProgress}`;
+      document.getElementById('stat-progress-bar').style.width = `${avgProgress}%`;
+      document.getElementById('stat-hours').textContent = `${totalHours.toFixed(1)} sa`;
+      document.getElementById('stat-rating').textContent = `${avgRating} / 10`;
+
+      document.getElementById('cnt-cat-all').textContent = total;
+      document.getElementById('cnt-cat-official').textContent = officialCount;
+      document.getElementById('cnt-cat-fangame').textContent = fanCount;
+
+    }
+
+    /**
+     * Kütüphane Izgarasını Çizer
+     */
+    function renderLibrary() {
+      const grid = document.getElementById('games-grid');
+      const emptyEl = document.getElementById('empty-state');
+
+      let filtered = games.filter(g => {
+        if (filterCategory !== 'all' && g.category !== filterCategory) return false;
+        if (filterStatus !== 'all' && g.status !== filterStatus) return false;
+        if (filterPlatform === 'steam' && !g.steamAppId) return false;
+        if (filterPlatform === 'owned' && !g.steamOwned) return false;
+        if (filterPlatform === 'gamejolt' && g.steamAppId) return false;
+
+        if (searchQuery.trim() !== '') {
+          const q = searchQuery.toLowerCase().trim();
+          const inTitle = g.title.toLowerCase().includes(q);
+          const inDev = (g.developer || '').toLowerCase().includes(q);
+          const inCode = (g.catalogCode || '').toLowerCase().includes(q);
+          const inThreats = (g.threats || []).some(t => t.name.toLowerCase().includes(q));
+          if (!inTitle && !inDev && !inCode && !inThreats) return false;
+        }
+        return true;
+      });
+
+      if (sortBy === 'year-desc') {
+        filtered.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+      } else if (sortBy === 'year-asc') {
+        filtered.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+      } else if (sortBy === 'progress-desc') {
+        filtered.sort((a, b) => getGameProgress(b) - getGameProgress(a));
+      } else if (sortBy === 'rating-desc') {
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      } else if (sortBy === 'hours-desc') {
+        filtered.sort((a, b) => (b.hours || 0) - (a.hours || 0));
+      } else if (sortBy === 'name-asc') {
+        filtered.sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      grid.innerHTML = filtered.map(game => {
+        const pct = getGameProgress(game);
+        const totalSteps = game.steps ? game.steps.length : 0;
+        const doneSteps = game.steps ? game.steps.filter(s => s.done).length : 0;
+        const st = STATUS_LABELS[game.status] || STATUS_LABELS.planned;
+
+        const catBadge = game.category === 'official'
+          ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase bg-[#e59a3c]/15 text-[#e59a3c] border border-[#e59a3c]/35">ORİJİNAL</span>`
+          : `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase bg-white/5 text-[#f2efe9] border border-white/15">FAN OYUNU</span>`;
+
+        const platformBadge = game.steamAppId
+          ? `<span class="px-1.5 py-0.5 text-[10px] font-mono uppercase border ${
+              game.steamOwned
+                ? 'bg-[#66c0f4]/20 text-[#66c0f4] border-[#66c0f4]/50 font-bold'
+                : 'bg-[#0b0c0f] text-[#66c0f4] border-[#66c0f4]/25'
+            }">STEAM · ${game.steamAppId}${game.steamOwned ? ' ✓' : ''}</span>`
+          : `<span class="px-1.5 py-0.5 text-[10px] font-mono uppercase bg-[#0b0c0f] text-[#9ca0ab] border border-white/10">GAMEJOLT</span>`;
+
+        return `
+          <article data-open-game="${game.id}" class="game-card flex overflow-hidden cursor-pointer group">
+            <!-- Sol: 2:3 Poster Kapak -->
+            <div class="w-28 sm:w-32 shrink-0 border-r border-white/10 bg-[#0b0c0f] self-stretch">
+              ${buildPosterHTML(game, true)}
+            </div>
+
+            <!-- Sağ: Kart İçeriği -->
+            <div class="flex-1 min-w-0 p-3.5 flex flex-col justify-between gap-2.5">
+              <div class="space-y-1.5">
+                <!-- Üst Rozet Satırı -->
+                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                  <div class="flex flex-wrap items-center gap-1">
+                    ${catBadge}
+                    ${platformBadge}
+                  </div>
+                  <span class="px-1.5 py-0.5 text-[10px] font-mono font-semibold border ${st.cls}">
+                    ${st.text}
+                  </span>
+                </div>
+
+                <!-- Başlık & Yıl / Yapımcı -->
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-[#f2efe9] group-hover:text-[#e59a3c] transition truncate" title="${game.title}">
+                    ${game.title}
+                  </h3>
+                  <p class="text-[11px] font-mono text-[#9ca0ab] truncate">
+                    ${game.year} · ${game.developer} · ${(game.threats || []).length} Tehdit
+                  </p>
+                </div>
+
+                <!-- Kısa Genel Amaç Özeti -->
+                <p class="text-xs text-[#9ca0ab] line-clamp-2 leading-relaxed">
+                  ${game.objective}
+                </p>
+              </div>
+
+              <!-- Alt: İlerleme Çubuğu + Metrikler + Hızlı Buton -->
+              <div class="space-y-2 pt-1.5 border-t border-white/10">
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-[11px] font-mono">
+                    <span class="text-[#9ca0ab]">${doneSteps}/${totalSteps} Gece / Adım</span>
+                    <span class="font-bold ${pct === 100 ? 'text-[#3ba56b]' : 'text-[#f2efe9]'}">%${pct}</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-[#0b0c0f] border border-white/10">
+                    <div class="h-full transition-all duration-300 ${pct === 100 ? 'bg-[#3ba56b]' : 'bg-[#e59a3c]'}" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-0.5">
+                  <div class="flex items-center gap-2.5 text-[11px] font-mono text-[#9ca0ab]">
+                    <span>${Number(game.hours || 0).toFixed(1)}sa</span>
+                    <span class="text-[#c93b3b]">${game.jumpscares || 0} JS</span>
+                    <span class="text-[#e59a3c]">${game.rating > 0 ? game.rating + '/10' : '—'}</span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    /**
+     * Oyun Detay Modalını Açar ve Tüm Alanları Doldurur
+     */
+    function openDetailModal(gameId) {
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
+      activeGameId = gameId;
+
+      document.getElementById('modal-catalog-badge').textContent = game.catalogCode;
+      document.getElementById('modal-title').textContent = game.title;
+      document.getElementById('modal-year-badge').textContent = `(${game.year} · ${game.developer})`;
+
+      // Genel Amaç, Hikâye ve Mekanikler
+      document.getElementById('modal-objective').textContent = game.objective;
+      document.getElementById('modal-story').textContent = game.story;
+      document.getElementById('modal-mechanics-badges').innerHTML = (game.mechanics || [])
+        .map(m => `<span class="px-2 py-0.5 text-[10px] font-mono bg-[#0b0c0f] text-[#9ca0ab] border border-white/10">${m}</span>`)
+        .join('');
+
+      // Steam Alanı
+      const steamPanel = document.getElementById('modal-steam-panel');
+      const steamLinks = document.getElementById('modal-steam-links');
+      if (game.steamAppId) {
+        steamPanel.classList.remove('hidden');
+        document.getElementById('modal-steam-appid').textContent = `AppID: ${game.steamAppId}`;
+        document.getElementById('modal-steam-owned').checked = !!game.steamOwned;
+        steamLinks.classList.remove('hidden');
+        document.getElementById('modal-link-store').href = `https://store.steampowered.com/app/${game.steamAppId}`;
+        document.getElementById('modal-link-achievements').href = `https://steamcommunity.com/stats/${game.steamAppId}/achievements`;
+      } else {
+        steamPanel.classList.remove('hidden');
+        document.getElementById('modal-steam-appid').textContent = 'GameJolt / Bağımsız';
+        document.getElementById('modal-steam-owned').checked = !!game.steamOwned;
+        steamLinks.classList.add('hidden');
+      }
+
+      // Silme onay kutusunu sıfırla
+      document.getElementById('delete-game-confirm').classList.add('hidden');
+      document.getElementById('delete-game-confirm').classList.remove('flex');
+      document.getElementById('btn-delete-game-prompt').classList.remove('hidden');
+
+      refreshModalDynamicFields();
+
+      const modal = document.getElementById('detail-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function refreshModalDynamicFields() {
+      const game = games.find(g => g.id === activeGameId);
+      if (!game) return;
+
+      // Poster Önizleme
+      document.getElementById('modal-poster-preview').innerHTML = buildPosterHTML(game, false);
+      document.getElementById('cover-url-input').value = game.customCover && !game.customCover.startsWith('data:') ? game.customCover : '';
+
+      // Durum, Süre, Jumpscare, Tarih, Notlar
+      document.getElementById('modal-status-select').value = game.status;
+      document.getElementById('modal-hours-input').value = game.hours || 0;
+      document.getElementById('modal-jumpscare-val').textContent = game.jumpscares || 0;
+      document.getElementById('modal-completed-date').value = game.completedDate || '';
+      document.getElementById('modal-notes').value = game.notes || '';
+
+      // 1-10 Yıldız Puanı
+      document.getElementById('modal-rating-label').textContent = game.rating > 0 ? `${game.rating} / 10` : 'Puanlanmadı';
+      let starsHtml = '';
+      for (let i = 1; i <= 10; i++) {
+        const active = i <= (game.rating || 0);
+        starsHtml += `
+          <button type="button" data-rate="${i}" title="${i} Puan"
+            class="p-0.5 transition ${active ? 'text-[#e59a3c]' : 'text-white/20 hover:text-[#9ca0ab]'}">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </button>
+        `;
+      }
+      document.getElementById('modal-star-row').innerHTML = starsHtml;
+
+      // Animatronik Tehdit Rehberi (Feature #2)
+      const threats = game.threats || [];
+      document.getElementById('modal-threat-count').textContent = `${threats.length} Tehdit`;
+      document.getElementById('modal-threats-list').innerHTML = threats.length === 0
+        ? `<p class="text-xs text-[#9ca0ab] bg-[#0b0c0f] p-2.5 border border-white/10">Bu oyun için henüz tehdit kaydı eklenmemiş. Aşağıdan ekleyebilirsin.</p>`
+        : threats.map((t, idx) => `
+          <div class="flex items-start justify-between gap-3 p-2.5 bg-[#0b0c0f] border border-white/10">
+            <div class="min-w-0 space-y-0.5">
+              <div class="text-xs font-bold text-[#c93b3b] uppercase tracking-wide">${t.name}</div>
+              <p class="text-xs text-[#f2efe9]/90 leading-relaxed">${t.counter}</p>
+            </div>
+            <button type="button" data-del-threat="${idx}" title="Tehdit notunu sil"
+              class="text-[11px] font-mono text-[#9ca0ab] hover:text-[#c93b3b] px-1.5 py-0.5 shrink-0">
+              &times;
+            </button>
+          </div>
+        `).join('');
+
+      // Gece & Adım Kontrol Listesi
+      const steps = game.steps || [];
+      const doneCount = steps.filter(s => s.done).length;
+      const pct = getGameProgress(game);
+      document.getElementById('modal-steps-counter').textContent = `${doneCount}/${steps.length}`;
+      document.getElementById('modal-progress-pct').textContent = `%${pct}`;
+      document.getElementById('modal-progress-slider').value = pct;
+
+      const syncBtn = document.getElementById('btn-sync-steps');
+      if (typeof game.manualProgress === 'number') {
+        syncBtn.classList.remove('hidden');
+      } else {
+        syncBtn.classList.add('hidden');
+      }
+
+      document.getElementById('modal-steps-list').innerHTML = steps.map(s => `
+        <div class="flex items-center justify-between gap-2 px-2.5 py-2 border transition ${
+          s.done
+            ? 'bg-[#3ba56b]/10 border-[#3ba56b]/40 text-[#f2efe9]'
+            : 'bg-[#0b0c0f] border-white/10 text-[#9ca0ab] hover:border-white/25'
+        }">
+          <label class="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+            <input type="checkbox" data-toggle-step="${s.id}" ${s.done ? 'checked' : ''}
+              class="w-3.5 h-3.5 accent-[#e59a3c] cursor-pointer shrink-0" />
+            <span class="text-xs font-medium truncate ${s.done ? 'line-through text-[#9ca0ab]' : 'text-[#f2efe9]'}">${s.label}</span>
+          </label>
+          <button type="button" data-del-step="${s.id}" title="Adımı sil"
+            class="text-xs font-mono text-[#9ca0ab] hover:text-[#c93b3b] px-1 shrink-0">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+      document.getElementById('detail-modal').classList.remove('flex');
+      activeGameId = null;
+    }
+
+    /**
+     * Özel Kapak Görselini Canvas ile 260x390 Boyutuna Küçültüp DataURL Üretir (LocalStorage Dostu)
+     */
+    function processUploadedCoverFile(file) {
+      if (!file || !activeGameId) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const targetW = 260;
+          const targetH = 390;
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+
+          // 2:3 oranında merkezden kırp (center crop)
+          const srcRatio = img.width / img.height;
+          const dstRatio = targetW / targetH;
+          let sx = 0, sy = 0, sw = img.width, sh = img.height;
+          if (srcRatio > dstRatio) {
+            sw = img.height * dstRatio;
+            sx = (img.width - sw) / 2;
+          } else {
+            sh = img.width / dstRatio;
+            sy = (img.height - sh) / 2;
+          }
+
+          ctx.fillStyle = '#0b0c0f';
+          ctx.fillRect(0, 0, targetW, targetH);
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          const game = games.find(g => g.id === activeGameId);
+          if (game) {
+            game.customCover = compressedDataUrl;
+            saveState(true, 'Özel kapak posteri güncellendi');
+            refreshModalDynamicFields();
+            renderLibrary();
+          }
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /**
+     * GÖRÜNÜM 3: STEAM EŞLEŞTİRME RENDER & PARSER
+     */
+    function renderSteamView() {
+      const steamGames = games.filter(g => g.steamAppId);
+      const ownedCount = steamGames.filter(g => g.steamOwned).length;
+      document.getElementById('steam-owned-summary').textContent = `${ownedCount} / ${steamGames.length} Steam Oyunu Sahip Olunan`;
+
+      const tbody = document.getElementById('steam-table-body');
+      tbody.innerHTML = steamGames.map(g => `
+        <tr class="hover:bg-white/[0.02] transition">
+          <td class="py-2.5 px-4 font-mono text-[11px] text-[#e59a3c]">${g.catalogCode}</td>
+          <td class="py-2.5 px-4 font-semibold text-[#f2efe9]">
+            <button type="button" data-open-game="${g.id}" class="text-left hover:text-[#e59a3c] transition">
+              ${g.title}
+            </button>
+          </td>
+          <td class="py-2.5 px-4 font-mono text-[#66c0f4]">${g.steamAppId}</td>
+          <td class="py-2.5 px-4">
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" data-toggle-steam-own="${g.id}" ${g.steamOwned ? 'checked' : ''}
+                class="w-3.5 h-3.5 accent-[#66c0f4] cursor-pointer" />
+              <span class="font-mono text-[11px] ${g.steamOwned ? 'text-[#66c0f4] font-bold' : 'text-[#9ca0ab]'}">
+                ${g.steamOwned ? 'KÜTÜPHANEDE' : 'YOK'}
+              </span>
+            </label>
+          </td>
+          <td class="py-2.5 px-4 font-mono text-[#f2efe9]">${Number(g.hours || 0).toFixed(1)} sa</td>
+          <td class="py-2.5 px-4 text-right font-mono space-x-2">
+            <a href="https://store.steampowered.com/app/${g.steamAppId}" target="_blank" rel="noopener noreferrer"
+              class="inline-block px-2 py-1 text-[11px] bg-[#0b0c0f] hover:bg-[#66c0f4] text-[#66c0f4] hover:text-[#0b0c0f] border border-[#66c0f4]/30 transition">
+              Mağaza
+            </a>
+            <a href="https://steamcommunity.com/stats/${g.steamAppId}/achievements" target="_blank" rel="noopener noreferrer"
+              class="inline-block px-2 py-1 text-[11px] bg-[#0b0c0f] hover:bg-[#f2efe9] text-[#9ca0ab] hover:text-[#0b0c0f] border border-white/15 transition">
+              Başarımlar
+            </a>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /**
+     * Yapıştırılan Steam metnini çözümler: oyun adı, AppID (düz sayı ya da mağaza bağlantısı) ve oynama süresi.
+     */
+    const STEAM_TITLE_RULES = {
+      'fnaf-1': [/five nights at freddy'?s(?!\s*(?:2|3|4|:|-|world))/, /\bfnaf\s*1\b/],
+      'fnaf-2': [/five nights at freddy'?s\s*2\b/, /\bfnaf\s*2\b/],
+      'fnaf-3': [/five nights at freddy'?s\s*3\b/, /\bfnaf\s*3\b/],
+      'fnaf-4': [/five nights at freddy'?s\s*4\b/, /\bfnaf\s*4\b/],
+      'fnaf-world': [/\bfnaf\s*world\b/],
+      'fnaf-sl': [/sister location/],
+      'fnaf-ffps': [/pizzeria simulator/, /\bffps\b/],
+      'fnaf-ucn': [/ultimate custom night/, /\bucn\b/],
+      'fnaf-hw': [/help wanted(?!\s*2)/],
+      'fnaf-hw2': [/help wanted\s*2\b/],
+      'fnaf-sb': [/security breach(?!\s*[:\-–—]?\s*ruin)/],
+      'fnaf-ruin': [/\bruin\b/],
+      'fnaf-itp': [/into the pit/],
+      'fnaf-sotm': [/secret of the mimic/],
+      'fan-popgoes': [/popgoes/]
+    };
+
+    function steamToNumber(s) {
+      const n = parseFloat(s.replace(/[.,](?=\d{3}(?!\d))/g, '').replace(',', '.'));
+      return Number.isNaN(n) ? null : n;
+    }
+
+    function steamHoursInLine(line) {
+      const m = line.match(/(\d[\d.,]*)\s*(?:hrs?|hours?|saat)\s*on record/) ||
+                line.match(/(\d[\d.,]*)\s*(?:hrs?|hours?|saat)\b/);
+      return m ? steamToNumber(m[1]) : null;
+    }
+
+    function steamGameIdForLine(line) {
+      for (const id in STEAM_TITLE_RULES) {
+        if (STEAM_TITLE_RULES[id].some(rx => rx.test(line))) return id;
+      }
+      return null;
+    }
+
+    function parseSteamPastedText(rawText) {
+      const text = String(rawText || '').toLowerCase()
+        .replace(/[’‘´`]/g, "'").replace(/[“”]/g, '"').trim();
+      if (!text) return [];
+
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const found = new Map();
+
+      // 1) AppID eşleşmeleri
+      games.forEach(g => {
+        if (g.steamAppId && new RegExp('(^|\\D)' + g.steamAppId + '(\\D|$)').test(text)) {
+          found.set(g.id, { game: g, parsedHours: null, selected: true });
+        }
+      });
+
+      // 2) Oyun adı eşleşmeleri + aynı satırda veya altındaki 2 satırda süre
+      lines.forEach((line, i) => {
+        const id = steamGameIdForLine(line);
+        const game = id ? games.find(g => g.id === id) : null;
+        if (!game) return;
+        let hours = steamHoursInLine(line);
+        for (let j = 1; j <= 2 && hours === null && lines[i + j] && !steamGameIdForLine(lines[i + j]); j++) {
+          hours = steamHoursInLine(lines[i + j]);
+        }
+        const prev = found.get(id);
+        found.set(id, {
+          game,
+          parsedHours: hours !== null ? hours : (prev ? prev.parsedHours : null),
+          selected: true
+        });
+      });
+
+      return Array.from(found.values());
+    }
+
+    function renderSteamPreview(matches) {
+      pendingSteamMatches = matches;
+      const box = document.getElementById('steam-preview-box');
+      const list = document.getElementById('steam-preview-list');
+
+      if (!matches || matches.length === 0) {
+        box.classList.add('hidden');
+        showToast('Metinde eşleşen Steam FNaF oyunu bulunamadı.', true);
+        return;
+      }
+
+      box.classList.remove('hidden');
+      document.getElementById('steam-preview-subtitle').textContent =
+        `${matches.length} oyun eşleştirildi. Aktarmak istediklerini seçip kütüphaneye uygula.`;
+
+      list.innerHTML = matches.map((m, idx) => `
+        <label class="flex items-center justify-between gap-3 p-3 bg-[#0b0c0f] border border-white/15 cursor-pointer">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <input type="checkbox" data-steam-preview-idx="${idx}" ${m.selected ? 'checked' : ''}
+              class="w-4 h-4 accent-[#66c0f4] shrink-0" />
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-[#f2efe9] truncate">${m.game.title}</div>
+              <div class="text-[11px] font-mono text-[#66c0f4]">AppID: ${m.game.steamAppId}</div>
+            </div>
+          </div>
+          <div class="text-right font-mono text-xs shrink-0">
+            ${m.parsedHours !== null
+              ? `<span class="text-[#e59a3c] font-bold">${m.parsedHours.toFixed(1)} sa</span>`
+              : `<span class="text-[#9ca0ab]">Süre yok</span>`}
+          </div>
+        </label>
+      `).join('');
+    }
+
+    /**
+     * Ana Görünüm Değiştirici (Kütüphane / Steam Eşleştirme)
+     */
+    function switchView(viewName) {
+      currentView = viewName;
+      document.getElementById('view-library').classList.toggle('hidden', viewName !== 'library');
+      document.getElementById('view-steam').classList.toggle('hidden', viewName !== 'steam');
+
+      document.querySelectorAll('.nav-view-btn').forEach(btn => {
+        const isTarget = btn.getAttribute('data-view') === viewName;
+        if (isTarget) {
+          btn.className = 'nav-view-btn flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-[1px] transition flex items-center justify-center gap-1.5 bg-[#e59a3c] text-[#0b0c0f]';
+        } else {
+          btn.className = 'nav-view-btn flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-[1px] transition flex items-center justify-center gap-1.5 text-[#9ca0ab] hover:text-[#f2efe9]';
+        }
+      });
+
+      if (viewName === 'steam') renderSteamView();
+    }
+
+    /**
+     * Başlatma & Tüm Olay Dinleyicileri
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      updateSummaryStats();
+      renderLibrary();
+
+
+      // Ana Görünüm Sekmeleri
+      document.querySelectorAll('.nav-view-btn').forEach(btn => {
+        btn.addEventListener('click', () => { setLoading(true, 'GÖRÜNÜM AÇILIYOR...'); requestAnimationFrame(() => { switchView(btn.getAttribute('data-view')); setTimeout(() => setLoading(false), 180); }); });
+      });
+
+      // Kütüphane Filtreleri
+      document.querySelectorAll('.filter-cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterCategory = btn.getAttribute('data-cat');
+          document.querySelectorAll('.filter-cat-btn').forEach(b => {
+            b.className = 'filter-cat-btn px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#9ca0ab] hover:text-[#f2efe9] border border-transparent rounded-[1px] whitespace-nowrap';
+          });
+          btn.className = 'filter-cat-btn px-3 py-1.5 text-xs font-semibold uppercase tracking-wider bg-[#1a1d24] text-[#f2efe9] border border-white/15 rounded-[1px] whitespace-nowrap';
+          renderLibrary();
+        });
+      });
+
+      document.querySelectorAll('.filter-status-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterStatus = btn.getAttribute('data-status');
+          document.querySelectorAll('.filter-status-btn').forEach(b => {
+            b.className = 'filter-status-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#f2efe9] border border-white/10 rounded-[1px] shrink-0';
+          });
+          btn.className = 'filter-status-btn px-2.5 py-1 text-xs font-semibold bg-[#f2efe9] text-[#0b0c0f] rounded-[1px] shrink-0';
+          renderLibrary();
+        });
+      });
+
+      document.querySelectorAll('.filter-platform-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterPlatform = btn.getAttribute('data-platform');
+          document.querySelectorAll('.filter-platform-btn').forEach(b => {
+            b.className = 'filter-platform-btn px-2.5 py-1 text-xs font-medium bg-[#0b0c0f] text-[#9ca0ab] hover:text-[#f2efe9] border border-white/10 rounded-[1px] shrink-0';
+          });
+          btn.className = 'filter-platform-btn px-2.5 py-1 text-xs font-semibold bg-[#f2efe9] text-[#0b0c0f] rounded-[1px] shrink-0';
+          renderLibrary();
+        });
+      });
+
+      document.getElementById('search-input').addEventListener('input', e => {
+        searchQuery = e.target.value;
+        renderLibrary();
+      });
+
+      document.getElementById('sort-select').addEventListener('change', e => {
+        sortBy = e.target.value;
+        renderLibrary();
+      });
+
+      document.getElementById('btn-reset-filters').addEventListener('click', () => {
+        filterCategory = 'all';
+        filterStatus = 'all';
+        filterPlatform = 'all';
+        searchQuery = '';
+        sortBy = 'default';
+        document.getElementById('search-input').value = '';
+        document.getElementById('sort-select').value = 'default';
+        document.querySelector('.filter-cat-btn[data-cat="all"]').click();
+        document.querySelector('.filter-status-btn[data-status="all"]').click();
+        document.querySelector('.filter-platform-btn[data-platform="all"]').click();
+      });
+
+      // Kart Tıklamaları (Delegation)
+      document.getElementById('games-grid').addEventListener('click', e => {
+        const card = e.target.closest('[data-open-game]');
+        if (card) {
+          openDetailModal(card.getAttribute('data-open-game'));
+        }
+      });
+
+      // ================= DETAY MODALI ETKİLEŞİMLERİ =================
+      document.getElementById('btn-close-detail').addEventListener('click', closeDetailModal);
+      document.getElementById('btn-modal-save-close').addEventListener('click', () => {
+        saveState(true, 'Değişiklikler kaydedildi');
+        closeDetailModal();
+      });
+      document.getElementById('detail-modal').addEventListener('click', e => {
+        if (e.target.id === 'detail-modal') closeDetailModal();
+      });
+
+      // Kapak Dosyası Yükleme, URL Ekleme ve Sıfırlama
+      document.getElementById('cover-file-input').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) processUploadedCoverFile(file);
+        e.target.value = '';
+      });
+
+      document.getElementById('btn-apply-cover-url').addEventListener('click', () => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const url = document.getElementById('cover-url-input').value.trim();
+        game.customCover = url;
+        saveState(true, url ? 'Kapak görseli URL kaydedildi' : 'Kapak görseli temizlendi');
+        refreshModalDynamicFields();
+        renderLibrary();
+      });
+
+      document.getElementById('btn-reset-cover').addEventListener('click', () => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.customCover = '';
+        saveState(true, 'Varsayılan arşiv posterine dönüldü');
+        refreshModalDynamicFields();
+        renderLibrary();
+      });
+
+      // Steam Sahiplik Checkbox
+      document.getElementById('modal-steam-owned').addEventListener('change', e => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.steamOwned = e.target.checked;
+        saveState(true, game.steamOwned ? 'Steam kütüphanesinde işaretlendi' : 'Steam işareti kaldırıldı');
+        renderLibrary();
+        if (currentView === 'steam') renderSteamView();
+      });
+
+      // Durum Değişikliği
+      document.getElementById('modal-status-select').addEventListener('change', e => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const newStatus = e.target.value;
+        game.status = newStatus;
+
+        if (newStatus === 'completed') {
+          if (game.steps) game.steps.forEach(s => s.done = true);
+          game.manualProgress = null;
+          if (!game.completedDate) {
+            game.completedDate = new Date().toISOString().slice(0, 10);
+          }
+        }
+
+        saveState();
+        refreshModalDynamicFields();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      // Yıldız Puanı
+      document.getElementById('modal-star-row').addEventListener('click', e => {
+        const btn = e.target.closest('[data-rate]');
+        if (!btn || !activeGameId) return;
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const val = parseInt(btn.getAttribute('data-rate'), 10);
+        game.rating = game.rating === val ? 0 : val;
+        saveState(true, game.rating > 0 ? `Puan: ${game.rating}/10` : 'Puan kaldırıldı');
+        refreshModalDynamicFields();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      // Süre & Jumpscare & Bitirme Tarihi & Notlar
+      document.getElementById('modal-hours-input').addEventListener('change', e => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const next = Math.max(0, parseFloat(e.target.value) || 0);
+        game.hours = next;
+        saveState();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      document.getElementById('btn-jumpscare-plus').addEventListener('click', () => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.jumpscares = (game.jumpscares || 0) + 1;
+        saveState(true, `Jumpscare sayacı: ${game.jumpscares}`);
+        refreshModalDynamicFields();
+        renderLibrary();
+      });
+
+      document.getElementById('btn-jumpscare-minus').addEventListener('click', () => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.jumpscares = Math.max(0, (game.jumpscares || 0) - 1);
+        saveState();
+        refreshModalDynamicFields();
+        renderLibrary();
+      });
+
+      document.getElementById('modal-completed-date').addEventListener('change', e => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.completedDate = e.target.value;
+        saveState();
+      });
+
+      document.getElementById('modal-notes').addEventListener('input', e => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.notes = e.target.value;
+        saveState(false);
+      });
+
+      // Tehdit Rehberi Ekleme & Silme (Feature #2)
+      document.getElementById('btn-add-threat').addEventListener('click', () => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const nameEl = document.getElementById('new-threat-name');
+        const counterEl = document.getElementById('new-threat-counter');
+        const name = nameEl.value.trim();
+        const counter = counterEl.value.trim();
+        if (!name || !counter) {
+          showToast('Tehdit adı ve taktik bilgisi girin.', true);
+          return;
+        }
+        if (!Array.isArray(game.threats)) game.threats = [];
+        game.threats.push({ name, counter });
+        nameEl.value = '';
+        counterEl.value = '';
+        saveState(true, 'Yeni tehdit notu eklendi');
+        refreshModalDynamicFields();
+        renderLibrary();
+      });
+
+      document.getElementById('modal-threats-list').addEventListener('click', e => {
+        const delBtn = e.target.closest('[data-del-threat]');
+        if (!delBtn || !activeGameId) return;
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const idx = parseInt(delBtn.getAttribute('data-del-threat'), 10);
+        game.threats.splice(idx, 1);
+        saveState(true, 'Tehdit kaydı silindi');
+        refreshModalDynamicFields();
+        renderLibrary();
+      });
+
+      // Gece & Adım Kontrol Listesi Etkileşimleri
+      document.getElementById('modal-steps-list').addEventListener('change', e => {
+        const cb = e.target.closest('[data-toggle-step]');
+        if (!cb || !activeGameId) return;
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const stepId = cb.getAttribute('data-toggle-step');
+        const step = game.steps.find(s => s.id === stepId);
+        if (step) {
+          step.done = cb.checked;
+          game.manualProgress = null;
+          const allDone = game.steps.length > 0 && game.steps.every(s => s.done);
+          if (step.done) {
+            if (allDone) {
+              game.status = 'completed';
+              if (!game.completedDate) game.completedDate = new Date().toISOString().slice(0, 10);
+            } else {
+              if (game.status === 'planned') game.status = 'playing';
+            }
+          }
+          saveState();
+          refreshModalDynamicFields();
+          updateSummaryStats();
+          renderLibrary();
+        }
+      });
+
+      document.getElementById('modal-steps-list').addEventListener('click', e => {
+        const delBtn = e.target.closest('[data-del-step]');
+        if (!delBtn || !activeGameId) return;
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const stepId = delBtn.getAttribute('data-del-step');
+        game.steps = game.steps.filter(s => s.id !== stepId);
+        game.manualProgress = null;
+        saveState(true, 'Adım silindi');
+        refreshModalDynamicFields();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      function addNewStep() {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const input = document.getElementById('new-step-input');
+        const label = input.value.trim();
+        if (!label) return;
+        game.steps.push({ id: 's-' + Date.now(), label, done: false });
+        game.manualProgress = null;
+        input.value = '';
+        saveState(true, 'Yeni adım eklendi');
+        refreshModalDynamicFields();
+        updateSummaryStats();
+        renderLibrary();
+      }
+
+      document.getElementById('btn-add-step').addEventListener('click', addNewStep);
+      document.getElementById('new-step-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addNewStep();
+        }
+      });
+
+      document.getElementById('modal-progress-slider').addEventListener('input', e => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        const val = parseInt(e.target.value, 10);
+        game.manualProgress = val;
+        if (val === 100) game.status = 'completed';
+        else if (val > 0 && game.status === 'planned') game.status = 'playing';
+        saveState(false);
+        refreshModalDynamicFields();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      document.getElementById('btn-sync-steps').addEventListener('click', () => {
+        const game = games.find(g => g.id === activeGameId);
+        if (!game) return;
+        game.manualProgress = null;
+        saveState(true, 'İlerleme adımlara eşitlendi');
+        refreshModalDynamicFields();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      // Oyunu Arşivden Silme
+      document.getElementById('btn-delete-game-prompt').addEventListener('click', () => {
+        document.getElementById('btn-delete-game-prompt').classList.add('hidden');
+        document.getElementById('delete-game-confirm').classList.remove('hidden');
+        document.getElementById('delete-game-confirm').classList.add('flex');
+      });
+
+      document.getElementById('btn-delete-game-no').addEventListener('click', () => {
+        document.getElementById('delete-game-confirm').classList.add('hidden');
+        document.getElementById('delete-game-confirm').classList.remove('flex');
+        document.getElementById('btn-delete-game-prompt').classList.remove('hidden');
+      });
+
+      document.getElementById('btn-delete-game-yes').addEventListener('click', () => {
+        if (!activeGameId) return;
+        const removed = games.find(g => g.id === activeGameId);
+        games = games.filter(g => g.id !== activeGameId);
+        saveState(true, `${removed ? removed.title : 'Oyun'} arşivden silindi`);
+        closeDetailModal();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      // ================= STEAM EŞLEŞTİRME ETKİLEŞİMLERİ =================
+      document.getElementById('btn-steam-sample').addEventListener('click', () => {
+        document.getElementById('steam-paste-input').value =
+          "Five Nights at Freddy's 14.5 hrs on record\n" +
+          "Five Nights at Freddy's 2 22.0 hrs on record\n" +
+          "Ultimate Custom Night 48.5 hrs on record\n" +
+          "Five Nights at Freddy's: Security Breach 31.2 hrs on record\n" +
+          "POPGOES Arcade 9.5 hrs on record";
+      });
+
+      document.getElementById('btn-steam-parse').addEventListener('click', () => {
+        const raw = document.getElementById('steam-paste-input').value;
+        const matches = parseSteamPastedText(raw);
+        renderSteamPreview(matches);
+      });
+
+      document.getElementById('steam-preview-list').addEventListener('change', e => {
+        const cb = e.target.closest('[data-steam-preview-idx]');
+        if (!cb) return;
+        const idx = parseInt(cb.getAttribute('data-steam-preview-idx'), 10);
+        if (pendingSteamMatches[idx]) {
+          pendingSteamMatches[idx].selected = cb.checked;
+        }
+      });
+
+      document.getElementById('btn-steam-cancel-preview').addEventListener('click', () => {
+        pendingSteamMatches = [];
+        document.getElementById('steam-preview-box').classList.add('hidden');
+      });
+
+      document.getElementById('btn-steam-apply-matches').addEventListener('click', () => {
+        const selected = pendingSteamMatches.filter(m => m.selected);
+        if (selected.length === 0) {
+          showToast('Uygulanacak oyun seçilmedi.', true);
+          return;
+        }
+
+        selected.forEach(item => {
+          item.game.steamOwned = true;
+          if (item.parsedHours !== null && item.parsedHours > 0) {
+            item.game.hours = item.parsedHours;
+          }
+        });
+
+        pendingSteamMatches = [];
+        document.getElementById('steam-preview-box').classList.add('hidden');
+        saveState(true, `${selected.length} Steam oyunu senkronize edildi`);
+        updateSummaryStats();
+        renderLibrary();
+        renderSteamView();
+      });
+
+      document.getElementById('steam-table-body').addEventListener('change', e => {
+        const cb = e.target.closest('[data-toggle-steam-own]');
+        if (!cb) return;
+        const gameId = cb.getAttribute('data-toggle-steam-own');
+        const game = games.find(g => g.id === gameId);
+        if (game) {
+          game.steamOwned = cb.checked;
+          saveState(true, `${game.catalogCode}: Steam sahiplik durumu güncellendi`);
+          renderSteamView();
+          renderLibrary();
+        }
+      });
+
+      document.getElementById('steam-table-body').addEventListener('click', e => {
+        const openBtn = e.target.closest('[data-open-game]');
+        if (openBtn) {
+          openDetailModal(openBtn.getAttribute('data-open-game'));
+        }
+      });
+
+      // ================= YENİ OYUN EKLEME MODALI =================
+      const addModal = document.getElementById('add-modal');
+      document.getElementById('btn-open-add').addEventListener('click', () => {
+        addModal.classList.remove('hidden');
+        addModal.classList.add('flex');
+        document.getElementById('add-title').focus();
+      });
+
+      function closeAddModal() {
+        addModal.classList.add('hidden');
+        addModal.classList.remove('flex');
+      }
+
+      document.getElementById('btn-close-add').addEventListener('click', closeAddModal);
+      document.getElementById('btn-cancel-add').addEventListener('click', closeAddModal);
+      addModal.addEventListener('click', e => {
+        if (e.target.id === 'add-modal') closeAddModal();
+      });
+
+      document.getElementById('add-game-form').addEventListener('submit', e => {
+        e.preventDefault();
+        const title = document.getElementById('add-title').value.trim();
+        if (!title) return;
+
+        const category = document.getElementById('add-category').value;
+        const catalogCode = document.getElementById('add-catalog').value.trim().toUpperCase() ||
+          (category === 'official' ? `FNAF-${games.length + 1}` : `FAN-${games.length + 1}`);
+        const year = document.getElementById('add-year').value.trim() || '2026';
+        const steamAppId = document.getElementById('add-appid').value.trim() || null;
+        const developer = document.getElementById('add-dev').value.trim() || 'Bağımsız Yapımcı';
+        const objective = document.getElementById('add-objective').value.trim() ||
+          'Bu oyundaki geceleri ve gizli sonları tamamlayarak sabah 6’ya kadar hayatta kalmak.';
+        const rawSteps = document.getElementById('add-steps').value.trim();
+
+        const stepLabels = rawSteps
+          ? rawSteps.split(',').map(s => s.trim()).filter(Boolean)
+          : ['Night 1', 'Night 2', 'Night 3', 'Night 4', 'Night 5', 'Night 6'];
+
+        const newGame = {
+          id: 'game-' + Date.now(),
+          catalogCode,
+          title,
+          category,
+          year,
+          developer,
+          steamAppId,
+          steamOwned: false,
+          accent: category === 'official' ? '#e59a3c' : '#66c0f4',
+          emblem: category === 'official' ? 'bear' : 'cat',
+          objective,
+          story: 'Kullanıcı tarafından arşive eklenen özel oyun kaydı.',
+          mechanics: category === 'official' ? ['Orijinal Seri', 'Hayatta Kalma'] : ['Fan Yapımı', 'Hayatta Kalma'],
+          threats: [],
+          status: 'planned',
+          manualProgress: null,
+          rating: 0,
+          hours: 0,
+          jumpscares: 0,
+          completedDate: '',
+          customCover: '',
+          notes: '',
+          steps: stepLabels.map((lbl, idx) => ({
+            id: `st-${Date.now()}-${idx}`,
+            label: lbl,
+            done: false
+          }))
+        };
+
+        games.unshift(newGame);
+        saveState(true, `"${title}" arşive eklendi`);
+        document.getElementById('add-game-form').reset();
+        closeAddModal();
+        updateSummaryStats();
+        renderLibrary();
+      });
+
+      // ================= YEDEKLEME & SIFIRLAMA MODALI =================
+      const backupModal = document.getElementById('backup-modal');
+      document.getElementById('btn-backup-open').addEventListener('click', () => {
+        document.getElementById('factory-reset-confirm').classList.add('hidden');
+        document.getElementById('factory-reset-confirm').classList.remove('flex');
+        backupModal.classList.remove('hidden');
+        backupModal.classList.add('flex');
+      });
+
+      function closeBackupModal() {
+        backupModal.classList.add('hidden');
+        backupModal.classList.remove('flex');
+      }
+
+      document.getElementById('btn-close-backup').addEventListener('click', closeBackupModal);
+      backupModal.addEventListener('click', e => {
+        if (e.target.id === 'backup-modal') closeBackupModal();
+      });
+
+      document.getElementById('btn-export-json').addEventListener('click', () => {
+        const exportObj = {
+          app: 'Fazbear Tracker v2',
+          exportedAt: new Date().toISOString(),
+          games
+        };
+        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fazbear-tracker-arsiv-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('JSON yedeği indirildi');
+      });
+
+      document.getElementById('input-import-json').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            const importedGames = Array.isArray(imported) ? imported : imported.games;
+            if (!Array.isArray(importedGames) || importedGames.length === 0) {
+              throw new Error('Geçersiz yedek dosyası');
+            }
+            const defaultMap = new Map(DEFAULT_GAMES.map(d => [d.id, d]));
+            games = importedGames.map(item => normalizeGameObject(item, defaultMap.get(item.id)));
+            saveState(true, 'Yedek başarıyla geri yüklendi');
+            closeBackupModal();
+            updateSummaryStats();
+            renderLibrary();
+            if (currentView === 'steam') renderSteamView();
+          } catch (err) {
+            showToast('Geçersiz JSON yedek dosyası!', true);
+          }
+          e.target.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btn-factory-reset-prompt').addEventListener('click', () => {
+        document.getElementById('factory-reset-confirm').classList.remove('hidden');
+        document.getElementById('factory-reset-confirm').classList.add('flex');
+      });
+
+      document.getElementById('btn-factory-reset-no').addEventListener('click', () => {
+        document.getElementById('factory-reset-confirm').classList.add('hidden');
+        document.getElementById('factory-reset-confirm').classList.remove('flex');
+      });
+
+      document.getElementById('btn-factory-reset-yes').addEventListener('click', () => {
+        games = JSON.parse(JSON.stringify(DEFAULT_GAMES));
+        saveState(true, 'Varsayılan 26 oyunluk arşive sıfırlandı');
+        closeBackupModal();
+        updateSummaryStats();
+        renderLibrary();
+        if (currentView === 'steam') renderSteamView();
+      });
+    });
+  </script>
+</body>
+</html>
