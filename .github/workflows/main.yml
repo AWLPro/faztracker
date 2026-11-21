@@ -23,7 +23,7 @@ jobs:
 
       - name: Paketleri Yükle ve Derle
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build
 
       - name: Pages Ayarla
