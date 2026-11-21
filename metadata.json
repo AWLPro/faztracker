@@ -1,6 +1,0 @@
-{
-  "name": "Fazbear — Animatronic Showcase",
-  "description": "Single-screen Five Nights at Freddy's animatronic hero slider with measured panel-wipe parallax transitions, floating horror props, and collectible shop.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
