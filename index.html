@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FAZBEAR TRACKER — FNaF &amp; Fan Oyunu İlerleme Arşivi</title>
+  <title>FazTracker — FNaF &amp; Fan Oyunu İlerleme Arşivi</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase Auth + Database -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -140,23 +138,11 @@
     .ft-loading.active { display:flex; }
     .ft-spinner { width:34px;height:34px;border:3px solid rgba(229,154,60,.2);border-top-color:#e59a3c;border-radius:50%;animation:ft-spin .75s linear infinite; }
     @keyframes ft-spin { to { transform:rotate(360deg); } }
-    .ft-auth-screen { position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(7,8,11,.97); }
-    .ft-auth-screen.hidden { display:none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-[#e59a3c]/30 selection:text-[#f2efe9]">
-  <!-- Hesap girişi -->
-  <section id="auth-screen" class="ft-auth-screen">
-    <div class="w-full max-w-md sharp-panel p-6 sm:p-8">
-      <div class="text-center mb-6"><div class="text-xs font-mono tracking-[.25em] text-[#e59a3c] mb-2">FAZBEAR DATABASE</div><h2 class="text-2xl font-extrabold">FAZBEAR <span class="text-[#e59a3c]">TRACKER</span></h2><p class="text-sm text-[#9ca0ab] mt-2">İlerlemeni hesabına kaydet, her cihazdan devam et.</p></div>
-      <div class="flex gap-2 mb-5"><button id="auth-mode-login" class="flex-1 py-2 text-xs font-bold bg-[#e59a3c] text-black">GİRİŞ YAP</button><button id="auth-mode-signup" class="flex-1 py-2 text-xs font-bold border border-white/15 text-[#9ca0ab]">KAYIT OL</button></div>
-      <form id="auth-form" class="space-y-3"><label class="block text-xs text-[#9ca0ab]">E-posta<input id="auth-email" type="email" required autocomplete="email" class="mt-1 w-full bg-[#0b0c0f] border border-white/15 p-3 text-sm text-white outline-none focus:border-[#e59a3c]" placeholder="ornek@mail.com"></label><label class="block text-xs text-[#9ca0ab]">Şifre<input id="auth-password" type="password" required minlength="6" autocomplete="current-password" class="mt-1 w-full bg-[#0b0c0f] border border-white/15 p-3 text-sm text-white outline-none focus:border-[#e59a3c]" placeholder="En az 6 karakter"></label><button id="auth-submit" class="w-full py-3 bg-[#e59a3c] text-[#0b0c0f] text-sm font-extrabold tracking-wider" type="submit">GİRİŞ YAP</button></form>
-      <p id="auth-message" class="text-xs text-center text-[#9ca0ab] mt-4" aria-live="polite">Devam etmek için hesabına giriş yap.</p>
-      <p class="text-[10px] text-center text-[#687080] mt-5">Hesap verilerin Supabase üzerinde güvenli şekilde saklanır.</p>
-    </div>
-  </section>
   <div id="ft-loading" class="ft-loading" aria-live="polite"><div class="sharp-panel px-7 py-6 flex flex-col items-center gap-3"><div class="ft-spinner"></div><span id="ft-loading-text" class="text-xs font-mono text-[#e59a3c]">YÜKLENİYOR...</span></div></div>
-  <div id="profile-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/80 p-4"><div class="sharp-panel w-full max-w-sm p-5"><div class="flex justify-between items-center mb-4"><h3 class="font-bold">HESABIM</h3><button id="profile-close" class="text-[#9ca0ab] text-xl">×</button></div><p class="text-[10px] text-[#9ca0ab] mb-1">E-POSTA</p><p id="profile-email" class="text-sm break-all mb-4"></p><label class="block text-xs text-[#9ca0ab]">Görünen ad<input id="profile-name" maxlength="40" class="mt-1 w-full bg-[#0b0c0f] border border-white/15 p-2.5 text-sm text-white"></label><button id="profile-save" class="w-full mt-3 py-2 bg-[#e59a3c] text-black text-xs font-bold">PROFİLİ KAYDET</button><button id="profile-logout" class="w-full mt-2 py-2 border border-[#c93b3b]/50 text-[#e87979] text-xs font-bold">ÇIKIŞ YAP</button></div></div>
+
 
   <!-- ========================================================= -->
   <!-- ÜST GEZİNME ÇUBUĞU (HEADER & SEKMELER)                    -->
@@ -177,7 +163,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-[#f2efe9] uppercase">
-              FAZBEAR <span class="text-[#e59a3c]">TRACKER</span>
+              FAZ<span class="text-[#e59a3c]">TRACKER</span>
             </h1>
             <span class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider bg-[#1a1d24] text-[#9ca0ab] border border-white/10 rounded-[1px]">
               ARCHIVE v2
@@ -209,7 +195,6 @@
 
       <!-- Sağ: Oyun Ekle & Yedekle / İçe Aktar -->
       <div class="flex items-center gap-2 order-2 lg:order-3">
-        <button id="btn-profile" type="button" class="px-3 py-1.5 text-xs font-medium bg-[#13151a] hover:bg-[#1a1d24] text-[#e59a3c] border border-white/10 rounded-[2px]">HESABIM</button>
         <button id="btn-backup-open" type="button"
           class="px-3 py-1.5 text-xs font-medium bg-[#13151a] hover:bg-[#1a1d24] text-[#f2efe9] border border-white/10 rounded-[2px] transition flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 text-[#9ca0ab]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -452,7 +437,7 @@
   <!-- Alt Bilgi -->
   <footer class="border-t border-white/10 py-4 mt-8 bg-[#0b0c0f]">
     <div class="max-w-[1380px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-[#9ca0ab]">
-      <span>FAZBEAR TRACKER · SUITE TV / BACKLOGGD TARZI FNAF ARŞİVİ</span>
+      <span>FAZTRACKER · FNAF ARŞİVİ</span>
       <span>YEREL DEPOLAMA AKTİF · TÜM VERİLER TARAYICIDA SAKLANIR</span>
     </div>
   </footer>
@@ -825,7 +810,7 @@
 
   <script>
     /**
-     * FAZBEAR TRACKER v2
+     * FAZTRACKER v2
      * Tek Dosyalı FNaF & Fan Oyunu Takip Arşivi
      * Özellikler: Kütüphane, 2:3 Özel Poster Kapakları, Animatronik Tehdit Rehberi & Steam Eşleştirme
      */
@@ -1743,124 +1728,12 @@
     let pendingSteamMatches = [];
     let toastTimer = null;
 
-    // Supabase proje bilgilerini kendi projenin Settings > API bölümünden doldur.
-    const SUPABASE_URL = 'dyfvtxikncouviwpbrvm';
-    const SUPABASE_ANON_KEY = 'sb_publishable_xftGHLqpuSbo3jk8xXAQSA_VKh7FiqV';
-    const supabaseConfigured = !SUPABASE_URL.includes('YOUR-PROJECT') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE');
-    const supabaseClient = supabaseConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-    let currentUser = null;
-    let authMode = 'login';
-    let cloudSaveTimer = null;
-    let cloudSaveChain = Promise.resolve();
-    let cloudReady = false;
-
     function setLoading(active, message = 'YÜKLENİYOR...') {
       const el = document.getElementById('ft-loading');
       if (!el) return;
       document.getElementById('ft-loading-text').textContent = message;
       el.classList.toggle('active', !!active);
     }
-
-    function setAuthMessage(message, isError = false) {
-      const el = document.getElementById('auth-message');
-      el.textContent = message;
-      el.className = `text-xs text-center mt-4 ${isError ? 'text-[#e87979]' : 'text-[#9ca0ab]'}`;
-    }
-
-    function setAuthMode(mode) {
-      authMode = mode;
-      const login = mode === 'login';
-      document.getElementById('auth-mode-login').className = `flex-1 py-2 text-xs font-bold ${login ? 'bg-[#e59a3c] text-black' : 'border border-white/15 text-[#9ca0ab]'}`;
-      document.getElementById('auth-mode-signup').className = `flex-1 py-2 text-xs font-bold ${!login ? 'bg-[#e59a3c] text-black' : 'border border-white/15 text-[#9ca0ab]'}`;
-      document.getElementById('auth-submit').textContent = login ? 'GİRİŞ YAP' : 'HESAP OLUŞTUR';
-      document.getElementById('auth-password').autocomplete = login ? 'current-password' : 'new-password';
-      setAuthMessage(login ? 'Devam etmek için hesabına giriş yap.' : 'E-posta adresinle yeni bir hesap oluştur.');
-    }
-
-    async function loadCloudData() {
-      if (!currentUser || !supabaseClient) return;
-      const { data, error } = await supabaseClient.from('fazbear_user_data').select('games, updated_at').eq('user_id', currentUser.id).maybeSingle();
-      if (error) throw error;
-      if (data && Array.isArray(data.games) && data.games.length) {
-        const defaultMap = new Map(DEFAULT_GAMES.map(d => [d.id, d]));
-        games = data.games.map(item => normalizeGameObject(item, defaultMap.get(item.id)));
-        localStorage.setItem(STORAGE_KEY_V2, JSON.stringify({version:2, updatedAt:data.updated_at, games}));
-      } else {
-        // İlk girişte mevcut tarayıcıdaki arşivi hesaba taşı; mevcut kayıtlar korunur.
-        await persistCloudData();
-      }
-      cloudReady = true;
-      updateSummaryStats(); renderLibrary();
-      if (currentView === 'steam') renderSteamView();
-    }
-
-    async function persistCloudData() {
-      if (!currentUser || !supabaseClient || !cloudReady && !currentUser) return;
-      const payload = { user_id: currentUser.id, games, updated_at: new Date().toISOString() };
-      const { error } = await supabaseClient.from('fazbear_user_data').upsert(payload, { onConflict: 'user_id' });
-      if (error) throw error;
-    }
-
-    function queueCloudSave() {
-      if (!currentUser || !cloudReady) return;
-      clearTimeout(cloudSaveTimer);
-      cloudSaveTimer = setTimeout(() => {
-        cloudSaveChain = cloudSaveChain.then(async () => {
-          setLoading(true, 'HESABA KAYDEDİLİYOR...');
-          try { await persistCloudData(); }
-          catch (err) { console.error('Bulut kayıt hatası:', err); showToast('Buluta kaydedilemedi; yerel yedek korundu.', true); }
-          finally { setLoading(false); }
-        });
-      }, 450);
-    }
-
-    async function handleAuthSubmit(e) {
-      e.preventDefault();
-      if (!supabaseConfigured) { setAuthMessage('Supabase bağlantısı henüz yapılandırılmadı. HTML içindeki SUPABASE_URL ve SUPABASE_ANON_KEY alanlarını doldur.', true); return; }
-      const email = document.getElementById('auth-email').value.trim();
-      const password = document.getElementById('auth-password').value;
-      setLoading(true, authMode === 'login' ? 'GİRİŞ YAPILIYOR...' : 'HESAP OLUŞTURULUYOR...');
-      try {
-        const result = authMode === 'login'
-          ? await supabaseClient.auth.signInWithPassword({ email, password })
-          : await supabaseClient.auth.signUp({ email, password, options: { data: { display_name: email.split('@')[0] } } });
-        if (result.error) throw result.error;
-        if (authMode === 'signup' && !result.data.session) {
-          setAuthMessage('Kayıt oluşturuldu. E-postana gelen doğrulama bağlantısını aç, ardından giriş yap.');
-          return;
-        }
-        currentUser = result.data.user;
-        await finishLogin();
-      } catch (err) { setAuthMessage(err.message || 'İşlem tamamlanamadı.', true); }
-      finally { setLoading(false); }
-    }
-
-    async function finishLogin() {
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('profile-email').textContent = currentUser.email || '';
-      document.getElementById('profile-name').value = currentUser.user_metadata?.display_name || '';
-      cloudReady = false;
-      await loadCloudData();
-      showToast('Hesabın bağlandı. Verilerin eşitlendi.');
-    }
-
-    async function initAccount() {
-      if (!supabaseConfigured) {
-        setAuthMessage('Supabase ayarları bekleniyor. Önce SQL şemasını çalıştırıp HTML dosyasındaki proje URL ve anon key alanlarını doldur.');
-        return;
-      }
-      setLoading(true, 'OTURUM KONTROL EDİLİYOR...');
-      try {
-        const { data, error } = await supabaseClient.auth.getSession();
-        if (error) throw error;
-        if (data.session?.user) { currentUser = data.session.user; await finishLogin(); }
-        supabaseClient.auth.onAuthStateChange((_event, session) => {
-          if (!session) { currentUser = null; cloudReady = false; document.getElementById('auth-screen').classList.remove('hidden'); }
-        });
-      } catch (err) { setAuthMessage(err.message || 'Oturum kontrol edilemedi.', true); }
-      finally { setLoading(false); }
-    }
-
 
     const STATUS_LABELS = {
       planned: {
@@ -1968,8 +1841,7 @@
       try {
         const payload = { version: 2, updatedAt: new Date().toISOString(), games };
         localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(payload));
-        queueCloudSave();
-        if (notify) showToast(currentUser ? 'Cihaza kaydedildi; hesap eşitleniyor…' : message, isError);
+        if (notify) showToast(message, isError);
       } catch (err) {
         showToast('Depolama alanı dolu! Kapak görselini küçültün.', true);
       }
@@ -2607,33 +2479,7 @@
       loadState();
       updateSummaryStats();
       renderLibrary();
-      initAccount();
-      document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
-      document.getElementById('auth-mode-login').addEventListener('click', () => setAuthMode('login'));
-      document.getElementById('auth-mode-signup').addEventListener('click', () => setAuthMode('signup'));
-      document.getElementById('btn-profile').addEventListener('click', () => {
-        if (!currentUser) { document.getElementById('auth-screen').classList.remove('hidden'); return; }
-        document.getElementById('profile-modal').classList.remove('hidden'); document.getElementById('profile-modal').classList.add('flex');
-      });
-      document.getElementById('profile-close').addEventListener('click', () => { document.getElementById('profile-modal').classList.add('hidden'); document.getElementById('profile-modal').classList.remove('flex'); });
-      document.getElementById('profile-save').addEventListener('click', async () => {
-        if (!currentUser) return;
-        setLoading(true, 'PROFİL KAYDEDİLİYOR...');
-        try {
-          const display_name = document.getElementById('profile-name').value.trim();
-          const { error } = await supabaseClient.auth.updateUser({ data: { display_name } });
-          if (error) throw error;
-          currentUser = (await supabaseClient.auth.getUser()).data.user;
-          showToast('Profil güncellendi.');
-        } catch (err) { showToast(err.message || 'Profil kaydedilemedi.', true); }
-        finally { setLoading(false); }
-      });
-      document.getElementById('profile-logout').addEventListener('click', async () => {
-        setLoading(true, 'ÇIKIŞ YAPILIYOR...');
-        try { await supabaseClient.auth.signOut(); currentUser = null; cloudReady = false; document.getElementById('profile-modal').classList.add('hidden'); document.getElementById('profile-modal').classList.remove('flex'); document.getElementById('auth-screen').classList.remove('hidden'); }
-        catch (err) { showToast(err.message || 'Çıkış yapılamadı.', true); }
-        finally { setLoading(false); }
-      });
+
 
       // Ana Görünüm Sekmeleri
       document.querySelectorAll('.nav-view-btn').forEach(btn => {
